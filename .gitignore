@@ -1,0 +1,36 @@
+# Entorno virtual
+venv/
+env/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Datos (los versiona DVC)
+data/raw/*
+!data/raw/*.dvc
+data/production/*
+!data/production/*.dvc
+data/scoring/*
+!data/scoring/*.dvc
+
+# Modelos entrenados (pesados)
+models/*
+!models/.gitkeep
+
+# Variables de entorno / credenciales
+.env
+*.env
+
+# Configuración de DVC con credenciales locales
+.dvc/config.local
+
+# Archivos de sistema / editor
+.DS_Store
+.vscode/
+*.swp
