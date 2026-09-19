@@ -59,7 +59,8 @@ preprocessor = build_preprocessor()
 model_pipeline = Pipeline([
     ("preprocessing", preprocessor),
     ("model", RandomForestClassifier(
-        random_state=42
+    random_state=42,
+    class_weight="balanced"
     )),
 ])
 
