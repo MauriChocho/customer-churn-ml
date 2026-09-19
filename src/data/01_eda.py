@@ -26,6 +26,22 @@ def run_eda(filepath: Path = DATA_PATH):
     duplicados = df.duplicated().sum()
     print(f"Filas duplicadas: {duplicados}\n")
 
+    print("--- Validación de customerID ---")
+    if "customerID" in df.columns:
+        clientes_unicos = df["customerID"].nunique()
+        total_registros = len(df)
+        ids_nulos = df["customerID"].isna().sum()
+
+        print(f"Clientes únicos: {clientes_unicos}")
+        print(f"Total de registros: {total_registros}")
+        print(f"customerID nulos: {ids_nulos}")
+        if clientes_unicos == total_registros and ids_nulos == 0:
+            print("Validación OK: todos los customerID son únicos.\n")
+        else:
+            print("Validación FALLIDA: hay customerID duplicados o nulos.\n")
+    else:
+        print("No se encontró la columna 'customerID'.\n")
+
     print("--- Valores nulos ---")
     nulos = df.isnull().sum()
     if nulos.sum() > 0:

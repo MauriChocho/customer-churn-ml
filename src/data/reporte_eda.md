@@ -20,7 +20,12 @@ Estuve revisando la tabla histórica de clientes y preparé este resumen con los
    - El 73.6% de los clientes permanece en la empresa (No).
    - El 26.4% se dio de baja (Yes).
    - Al haber menos clientes que se van que los que se quedan, tenemos que asegurarnos de que la separación de datos entre entrenamiento y prueba conserve esta misma proporción (usando la opción de estratificado stratify=y).
-
+   --- Validación de customerID ---
+   Clientes únicos: 7043
+   Total de registros: 7043
+   customerID nulos: 0
+   Validación OK: todos los customerID son únicos.
+   
 ## Estadísticas descriptivas
 
  Variable         Media    Mediana  Std      Min  Max 
