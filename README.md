@@ -80,3 +80,47 @@ MLflow, FastAPI y Docker se incorporan en entregas posteriores.
 ## Estado actual
 
 🚧 Proyecto en desarrollo — Entrega 1 en curso.
+
+## Ejecucion de los modulos
+
+Los comandos deben ejecutarse desde la carpeta raiz del proyecto.
+
+Esto es importante para que Python pueda reconocer correctamente los modulos internos dentro de `src/`.
+
+### Validar el preprocessing
+
+Para ejecutar y validar el preprocessing comun:
+
+```bash
+python -m src.features.preprocessing
+```
+
+Este modulo aplica las transformaciones definidas para las variables numericas, categoricas y binarias.
+
+### Entrenar Random Forest
+
+Para entrenar y evaluar el modelo Random Forest:
+
+```bash
+python -m src.training.train_random_forest
+```
+
+El script:
+
+- carga el dataset
+- separa las variables predictoras y la variable objetivo
+- realiza la division train/test
+- aplica el preprocessing comun
+- entrena el modelo
+- calcula las metricas de evaluacion
+- muestra la matriz de confusion
+
+### Resultados de los modelos
+
+Los resultados y la comparacion entre los distintos modelos se documentan en:
+
+```text
+src/evaluation/comparacion_modelos.md
+```
+
+La comparacion utiliza como metrica principal el F1-score y considera tambien Precision, Recall, ROC-AUC y Accuracy.
