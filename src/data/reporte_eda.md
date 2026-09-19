@@ -15,6 +15,7 @@ Estuve revisando la tabla histórica de clientes y preparé este resumen con los
    - No hay registros duplicados en la tabla.
    - Encontramos 26 valores faltantes únicamente en la columna TotalCharges. Para no tocar el archivo original a mano, lo resolveremos en el preprocesamiento completando esos nulos con la mediana.
    - La columna customerID se usa para identidicar a cada cliente de forma única. Como no aporta un valor predictivo no la cosnideramos una variable de analisis.
+   - `SeniorCitizen` toma los valores 0 y 1. Aunque pandas la identifica como numérica, representa dos grupos y se tratará como una variable binaria.
 
 3. Variable de estudio Churn (Fuga de clientes) Variable categorida con dos valores posibles:Yes o No 
    - El 73.6% de los clientes permanece en la empresa (No).
@@ -66,6 +67,7 @@ Esta variable parece ser una buena opción para predecir el churn.
 Para facilitar el armado del preprocesador y los pipelines, dejo agrupadas las columnas según su tipo:
 
 * Evaludar la posibilidad de eliminar la columna customerID porque no es de relevancia para la predicción
-* Variable predictora (Target): Churn (mapear Yes como 1 y No como 0)
+* Variable objetivo (target): Churn (mapear Yes como 1 y No como 0)
 * Variables numéricas (3): tenure, MonthlyCharges, TotalCharges
-* Variables categóricas (16): gender, SeniorCitizen, Partner, Dependents, PhoneService, MultipleLines, InternetService, OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport, StreamingTV, StreamingMovies, Contract, PaperlessBilling, PaymentMethod
+* Variable binaria: SeniorCitizen (0/1)
+* Variables categóricas (15): gender, Partner, Dependents, PhoneService, MultipleLines, InternetService, OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport, StreamingTV, StreamingMovies, Contract, PaperlessBilling, PaymentMethod
