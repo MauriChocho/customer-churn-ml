@@ -19,12 +19,40 @@ Tambien se analizan Precision, Recall, ROC-AUC y Accuracy como metricas compleme
 
 | Modelo | Precision | Recall | F1-score | ROC-AUC | Accuracy |
 |---|---:|---:|---:|---:|---:|
-| Baseline | — | — | — | — | — |
+| Baseline | 0.0000 | 0.0000 | 0.0000 | 0.5000 | 0.7360 |
 | Logistic Regression | — | — | — | — | — |
 | Decision Tree | — | — | — | — | — |
 | Random Forest | 0.6564 | 0.4005 | 0.4975 | 0.7930 | 0.7864 |
 
 ## Detalle por modelo
+
+### Baseline (DummyClassifier)
+
+Se utilizo un DummyClassifier con `strategy="most_frequent"` como punto de referencia minimo. Al tratarse de un baseline, no se probaron variantes de configuracion.
+
+Configuracion utilizada:
+
+```python
+DummyClassifier(
+    strategy="most_frequent",
+    random_state=42
+)
+```
+
+Matriz de confusion:
+
+```text
+[[1037    0]
+ [ 372    0]]
+```
+
+Interpretacion:
+
+- 1037 clientes sin churn fueron clasificados correctamente, porque el modelo siempre predice la clase mayoritaria.
+- 372 clientes con churn no fueron detectados en ningun caso.
+- El modelo no distingue entre clases: Precision, Recall y F1-score son 0, y el ROC-AUC (0.5000) equivale a una prediccion al azar.
+
+Este resultado confirma que Accuracy sola no es una metrica adecuada para este problema: un modelo que no aprendio nada obtiene un Accuracy relativamente alto (0.7360) unicamente por el desbalance de clases.
 
 ### Random Forest
 
