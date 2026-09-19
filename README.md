@@ -2,6 +2,14 @@
 
 Proyecto integrador de la materia **Laboratorio de Minería de Datos** (ISTEA) — predicción de churn de clientes con un enfoque de MLOps end-to-end.
 
+## Problema de negocio
+
+Una empresa de telecomunicaciones necesita identificar clientes con riesgo de abandonar el
+servicio (`Churn`). El sistema debe estimar la probabilidad de abandono de un cliente y
+devolver un nivel de riesgo (`LOW` / `MEDIUM` / `HIGH`) consumible por otros sistemas
+(por ejemplo, un CRM o una campaña de retención).
+
+
 ## Estructura del repositorio
 
 ```
@@ -44,10 +52,25 @@ customer-churn-ml/
    pip install -r requirements.txt
 ```
 
-4. Descargar los datos versionados con DVC
-```bash
+4. Configuración de acceso a los datos (DVC + DagsHub)
+
+Los datos del proyecto están versionados con DVC y alojados en DagsHub, no en este repositorio.
+
+Para poder descargarlos, cada persona debe configurar su propio acceso:
+
+1. Crear una cuenta en DagsHub (si no la tenés).
+2. Generar un token personal desde Settings → Tokens.
+3. Configurar la autenticación local (reemplazando por tus propios datos):
+ -Apartado "Data" -> Setup Credentials
+
+   - dvc remote modify origin --local auth basic
+   - dvc remote modify origin --local user <tu_usuario_dagshub>
+   - dvc remote modify origin --local password <tu_token>
+
+4. Descargar los datos:
+
    dvc pull
-```
+
 
 ## Stack utilizado (Entrega 1)
 
