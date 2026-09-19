@@ -20,7 +20,7 @@ Tambien se analizan Precision, Recall, ROC-AUC y Accuracy como metricas compleme
 | Modelo | Precision | Recall | F1-score | ROC-AUC | Accuracy |
 |---|---:|---:|---:|---:|---:|
 | Baseline | — | — | — | — | — |
-| Logistic Regression | — | — | — | — | — |
+| Logistic Regression | 0.6614 | 0.4516 | 0.5367 | 0.8119 | 0.7942 |
 | Decision Tree | — | — | — | — | — |
 | Random Forest | 0.6564 | 0.4005 | 0.4975 | 0.7930 | 0.7864 |
 
@@ -62,6 +62,43 @@ Interpretacion:
 - 149 clientes con churn fueron detectados correctamente.
 
 El Recall relativamente bajo indica que el modelo todavia deja sin detectar una parte importante de los clientes que realmente abandonan.
+
+### Logistic Regression
+
+Configuracion utilizada:
+
+​```python
+LogisticRegression(
+    max_iter=1000,
+    random_state=42
+)
+​```
+
+Metricas obtenidas:
+
+| Metrica | Valor |
+|---|---|
+| Precision | 0.6614 |
+| Recall | 0.4516 |
+| F1-score | 0.5367 |
+| ROC-AUC | 0.8119 |
+| Accuracy | 0.7942 |
+
+Matriz de confusion:
+
+​```text
+[[951  86]
+ [204 168]]
+​```
+
+Interpretacion:
+
+- 951 clientes sin churn fueron clasificados correctamente.
+- 86 clientes sin churn fueron clasificados incorrectamente como churn.
+- 204 clientes con churn no fueron detectados.
+- 168 clientes con churn fueron detectados correctamente.
+
+Comparado con Random Forest (F1 0.4975), Logistic Regression obtuvo mejor resultado en las cuatro metricas principales (F1 0.5367, ROC-AUC 0.8119). El Recall sigue siendo el punto debil de ambos modelos: mas de la mitad de los clientes que se van no son detectados a tiempo.
 
 ## Seleccion del modelo candidato
 
