@@ -58,7 +58,8 @@ preprocessor = build_preprocessor()
 model_pipeline = Pipeline([
     ("preprocessing", preprocessor),
     ("model", DecisionTreeClassifier(
-        random_state=42
+        random_state=42,
+        max_depth=10,
     )),
 ])
 

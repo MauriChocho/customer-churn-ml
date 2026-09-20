@@ -64,8 +64,8 @@ Se probo el modelo de arbol de decision con parametros standard y otras variable
 
 Configuracion | Precision | Recall | F1-score | ROC-AUC | Accuracy |
 |---|---:|---:|---:|---:|---:|
-| Standard | 0.4928 | 0.4624 | 0.4771 | 0.6458 | 0.7324 |
-|  | - | - | - | - | - |
+|   Standard  | 0.4928 | 0.4624 | 0.4771 | 0.6458 | 0.7324 |
+| max_depth=5 | 0.5302 | 0.4489 | 0.4862 | 0.7041 | 0.7495 |
 |  | - | - | - | - | - |
 
 
