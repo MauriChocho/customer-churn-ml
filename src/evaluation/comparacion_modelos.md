@@ -68,6 +68,15 @@ Se probo el modelo de arbol de decision con parametros standard y otras variable
 |       max_depth=10      | 0.5302 | 0.4489 | 0.4862 | 0.7041 | 0.7495 |
 | class_weight "balanced"| 0.4531 | 0.6102 | 0.5200 | 0.7137 | 0.7026 |
 
+** Aclaración: cada train sumo el parametro anterior.
+
+**Observaciones:**
+- El modelo standard (sin restricciones) tiene overfitting severo: F1-score de 1.0000 en train vs. 0.4771 en test.
+- Limitar la profundidad (max_depth=10) mejoro Precision y ROC-AUC, aunque bajo levemente el Recall.
+- Sumar parametro class_weight="balanced" mejoro significativamente el Recall (0.4489 → 0.6102), dando el mejor F1-score general.
+
+**Mejor Configuración final:** max_depth=10 + class_weight="balanced" (mejor F1-score y mejor ROC-AUC)
+
 
 ### Random Forest
 
