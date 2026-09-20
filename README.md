@@ -142,23 +142,39 @@ El script:
 - muestra la matriz de confusion
 
 
-### Exploración de hiperparámetros de SVM
-Imprime en consola: dimensiones y tipos de datos, duplicados, validación de `customerID`, valores nulos, distribución de `Churn`, estadísticas descriptivas y relación de las variables con el target.
+### Exploración de configuraciones de SVM
+
+Para probar distintas configuraciones de SVM utilizando el mismo split y preprocessing:
 
 ```bash
 python -m src.training.pre_train_svm
 ```
+Este script:
 
+carga el dataset
+realiza la division train/test
+aplica el preprocessing comun
+prueba distintas configuraciones de SVM
+muestra la matriz de confusion de cada configuracion
 
-
-### Entrenamiento del modelo SVM final
-Entrena y compara 4 configuraciones de SVM (kernel, C, class_weight) sobre el mismo split y preprocessing, e imprime Precision, Recall, F1-score, ROC-AUC, Accuracy y matriz de confusión de cada una. Es el script que generó la evidencia documentada en `src/evaluation/comparacion_modelos.md`.
+### Entrenar modelo SVM
+Luego ejecutamos el entrenamiento:
 
 ```bash
 python -m src.training.train_svm
 ```
 
-Entrena el pipeline completo (preprocessing + SVM) con la configuración elegida (`kernel="rbf", C=1.0, class_weight="balanced"`, calibrada con `CalibratedClassifierCV`) e imprime sus métricas finales.
+El script:
+
+carga el dataset
+separa las variables predictoras y la variable objetivo
+realiza la division train/test
+aplica el preprocessing comun
+entrena la configuracion seleccionada de SVM
+calcula Precision, Recall, F1-score, ROC-AUC y Accuracy
+muestra la matriz de confusion
+
+
 ### Resultados de los modelos
 
 Los resultados y la comparacion entre los distintos modelos se documentan en:
