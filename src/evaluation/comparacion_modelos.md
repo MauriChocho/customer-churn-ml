@@ -20,7 +20,7 @@ Tambien se analizan Precision, Recall, ROC-AUC y Accuracy como metricas compleme
 | Modelo | Precision | Recall | F1-score | ROC-AUC | Accuracy |
 |---|---:|---:|---:|---:|---:|
 | Baseline | 0.0000 | 0.0000 | 0.0000 | 0.5000 | 0.7360 |
-| Logistic Regression | 0.6614 | 0.4516 | 0.5367 | 0.8119 | 0.7942 |
+| Logistic Regression | 0.4812 | 0.7231 | 0.5779 | 0.8118 | 0.7211 |
 | Decision Tree | 0.4527 | 0.6048 | 0.5178 | 0.7089 | 0.7026 |
 | Random Forest | 0.6564 | 0.4005 | 0.4975 | 0.7930 | 0.7864 |
 | SVM           | 0.6293 | 0.4973 | 0.5556 | 0.8017 | 0.7899 |
@@ -134,27 +134,31 @@ Configuracion seleccionada:
 ```python
 LogisticRegression(
     max_iter=1000,
-    random_state=42
+    random_state=42,
+    class_weight="balanced",
+    C=0.1
 )
 ```
 
-Se mantuvo la configuracion inicial como principal: aunque `class_weight="balanced"` logra un F1 levemente mayor, lo hace a costa de una caida fuerte en Precision (de 0.66 a 0.48), generando muchos mas falsos positivos. Este trade-off no fue evaluado ni acordado por el equipo, por lo que se deja documentado como variante y no como configuracion definitiva.
+Se selecciono la configuracion `class_weight="balanced", C=0.1` porque obtuvo el mayor F1-score entre las variantes probadas (0.5779), que es la metrica principal acordada para comparar los modelos. Ademas, mejoro significativamente el Recall, pasando de 0.4516 a 0.7231, lo que permite detectar una mayor cantidad de clientes que realmente abandonan.
+
+Como contrapartida, la Precision bajo de 0.6614 a 0.4812, por lo que aumentan los falsos positivos. Esto significa que el modelo identifica como posibles churn a mas clientes que finalmente no abandonan. Sin embargo, para este proyecto se prioriza el equilibrio entre Precision y Recall medido mediante F1-score.
 
 Matriz de confusion:
 
 ```text
-[[951  86]
- [204 168]]
+[[747  290]
+ [103 269]]
 ```
 
 Interpretacion:
 
-- 951 clientes sin churn fueron clasificados correctamente.
-- 86 clientes sin churn fueron clasificados incorrectamente como churn.
-- 204 clientes con churn no fueron detectados.
-- 168 clientes con churn fueron detectados correctamente.
+- 747 clientes sin churn fueron clasificados correctamente.
+- 290 clientes sin churn fueron clasificados incorrectamente como churn.
+- 103 clientes con churn no fueron detectados.
+- 269 clientes con churn fueron detectados correctamente.
 
-Comparado con Random Forest (F1 0.4975), Logistic Regression obtuvo mejores resultados en Precision, Recall, F1-score, ROC-AUC y Accuracy. El Recall sigue siendo el punto debil de ambos modelos: mas de la mitad de los clientes con churn no son identificados correctamente.
+Comparado con Random Forest (F1 0.4975), Logistic Regression obtuvo un mejor F1-score (0.5779), un Recall considerablemente mayor (0.7231 vs. 0.4005) y un ROC-AUC superior (0.8118 vs. 0.7930). Sin embargo, Random Forest obtuvo mejores resultados en Precision y Accuracy. La configuracion seleccionada de Logistic Regression logra detectar una mayor proporcion de clientes con churn, aunque a costa de generar mas falsos positivos.
 
 
 ### Pruebas con el modelo SVM (Support Vector Machine)

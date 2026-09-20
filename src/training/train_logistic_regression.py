@@ -34,7 +34,12 @@ preprocessor = build_preprocessor()
 
 modelo_logreg = Pipeline([
     ("preprocessing", preprocessor),
-    ("model", LogisticRegression(max_iter=1000, random_state=42)),
+    ("model", LogisticRegression(
+    max_iter=1000,
+    random_state=42,
+    class_weight="balanced",
+    C=0.1
+    )),
 ])
 
 print(modelo_logreg)
