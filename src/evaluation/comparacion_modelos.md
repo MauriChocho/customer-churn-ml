@@ -62,11 +62,11 @@ Este resultado confirma que Accuracy sola no es una metrica adecuada para este p
 
 Se probo el modelo de arbol de decision con parametros standard y otras variables para mejorar resultados.
 
-Configuracion | Precision | Recall | F1-score | ROC-AUC | Accuracy |
+|      Configuracion     | Precision | Recall | F1-score | ROC-AUC | Accuracy |
 |---|---:|---:|---:|---:|---:|
-|   Standard  | 0.4928 | 0.4624 | 0.4771 | 0.6458 | 0.7324 |
-| max_depth=5 | 0.5302 | 0.4489 | 0.4862 | 0.7041 | 0.7495 |
-|  | - | - | - | - | - |
+|        Standard        | 0.4928 | 0.4624 | 0.4771 | 0.6458 | 0.7324 |
+|       max_depth=10      | 0.5302 | 0.4489 | 0.4862 | 0.7041 | 0.7495 |
+| class_weight "balanced"| 0.4531 | 0.6102 | 0.5200 | 0.7137 | 0.7026 |
 
 
 ### Random Forest

@@ -60,6 +60,7 @@ model_pipeline = Pipeline([
     ("model", DecisionTreeClassifier(
         random_state=42,
         max_depth=10,
+        class_weight="balanced"
     )),
 ])
 
