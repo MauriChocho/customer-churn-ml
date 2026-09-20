@@ -107,6 +107,22 @@ python -m src.features.preprocessing
 
 Este modulo aplica las transformaciones definidas para las variables numericas, categoricas y binarias.
 
+## Entrenar Baseline
+
+Para entrenar y evaluar el modelo baseline:
+
+python -m src.training.train_baseline
+
+El script:
+
+- carga el dataset
+- separa las variables predictoras y la variable objetivo
+- realiza la division train/test
+- aplica el preprocessing comun
+- entrena un DummyClassifier como referencia minima
+- calcula las metricas de evaluacion
+- muestra la matriz de confusion
+
 ### Entrenar Random Forest
 
 Para entrenar y evaluar el modelo Random Forest:
