@@ -2,6 +2,9 @@
 # objetivo: entrenar y evaluar Logistic Regression usando el pipeline comun del equipo
 
 import pandas as pd
+import joblib
+from pathlib import Path
+
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
@@ -35,10 +38,10 @@ preprocessor = build_preprocessor()
 modelo_logreg = Pipeline([
     ("preprocessing", preprocessor),
     ("model", LogisticRegression(
-    max_iter=1000,
-    random_state=42,
-    class_weight="balanced",
-    C=0.1
+        max_iter=1000,
+        random_state=42,
+        class_weight="balanced",
+        C=0.1
     )),
 ])
 
@@ -72,3 +75,13 @@ accuracy = accuracy_score(y_test, y_pred)
 print("Accuracy (referencia, no es la metrica principal):", round(accuracy, 4))
 print("Matriz de confusion:")
 print(matriz)
+
+# Guardar el pipeline completo entrenado
+MODEL_DIR = Path("models")
+MODEL_PATH = MODEL_DIR / "churn_pipeline.joblib"
+
+MODEL_DIR.mkdir(parents=True, exist_ok=True)
+
+joblib.dump(modelo_logreg, MODEL_PATH)
+
+print("Pipeline guardado en:", MODEL_PATH)
