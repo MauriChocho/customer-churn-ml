@@ -23,6 +23,7 @@ Tambien se analizan Precision, Recall, ROC-AUC y Accuracy como metricas compleme
 | Logistic Regression | — | — | — | — | — |
 | Decision Tree | — | — | — | — | — |
 | Random Forest | 0.6564 | 0.4005 | 0.4975 | 0.7930 | 0.7864 |
+| SVM  | 0.6293 | 0.4973 | 0.5556 | 0.8017 | 0.7899 |
 
 ## Detalle por modelo
 
@@ -90,6 +91,36 @@ Interpretacion:
 - 149 clientes con churn fueron detectados correctamente.
 
 El Recall relativamente bajo indica que el modelo todavia deja sin detectar una parte importante de los clientes que realmente abandonan.
+
+### Pruebas con el modelo SVM (Support Vector Machine)
+
+Para probar una alternativa distinta a los árboles y a la regresión logística, entrenamos un modelo SVM usando exactamente la misma partición y preprocesamiento que acordamos para todo el proyecto (`test_size=0.20`, `stratify=y`, `random_state=42`).
+Al ejecutar el entrenamiento (`train_svm.py`), obtuvimos los siguientes resultados sobre el conjunto de prueba:
+
+* **Accuracy:** 78.99%
+* **Precision:** 62.93%
+* **Recall:** 49.73%
+* **F1-score:** 55.56%
+* **ROC-AUC:** 80.17%
+
+#### ¿Qué nos muestra la matriz de confusión?
+Matriz de confusion:
+```text
+[[928 109]
+ [187 185]]
+```
+
+* **928 clientes que se quedaban** El modelo predijo correctamente que permanecían en la empresa (Verdaderos Negativos).
+* **109 clientes estables** El modelo los clasificó por error como si fueran a darse de baja (Falsos Positivos).
+* **185 clientes en riesgo real** El modelo los identificó a tiempo para poder aplicar acciones de retención (Verdaderos Positivos).
+* **187 clientes en riesgo real** El modelo no los detectó y los consideró estables (Falsos Negativos).
+
+#### Conclusión del experimento
+
+Lo positivo de probar SVM es que **mejoró la detección de clientes en fuga respecto al Random Forest inicial**: el F1-score subió de 0.4975 a 0.5556 y el Recall mejoró de 40.05% a 49.73%. 
+
+Sin embargo, el punto débil sigue siendo que se le escapan 187 clientes en riesgo (casi el 50% del total de casos de Churn). Para el negocio esto es relevante porque un falso negativo significa perder al cliente sin haber actuado preventivamente.
+
 
 ## Seleccion del modelo candidato
 
