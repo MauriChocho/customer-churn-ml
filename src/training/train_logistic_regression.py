@@ -3,6 +3,9 @@
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix, accuracy_score
 
 from src.features.preprocessing import TARGET, ID_COL, build_preprocessor
 
@@ -26,15 +29,12 @@ print("Filas de test:", X_test.shape[0])
 print("Proporcion de Churn en train:", y_train.mean().round(4))
 print("Proporcion de Churn en test:", y_test.mean().round(4))
 
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
-
 # Armar el pipeline completo: preprocesamiento + modelo
 preprocessor = build_preprocessor()
 
 modelo_logreg = Pipeline([
-    ("preprocessor", preprocessor),
-    ("classifier", LogisticRegression(max_iter=1000, random_state=42)),
+    ("preprocessing", preprocessor),
+    ("model", LogisticRegression(max_iter=1000, random_state=42)),
 ])
 
 print(modelo_logreg)
@@ -43,8 +43,6 @@ print(modelo_logreg)
 modelo_logreg.fit(X_train, y_train)
 
 print("Entrenamiento finalizado.")
-
-from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
 
 # Predicciones sobre el set de test
 y_pred = modelo_logreg.predict(X_test)
@@ -61,8 +59,6 @@ print("Precision:", round(precision, 4))
 print("Recall:", round(recall, 4))
 print("F1-score:", round(f1, 4))
 print("ROC-AUC:", round(roc_auc, 4))
-
-from sklearn.metrics import confusion_matrix, accuracy_score
 
 # Matriz de confusion y accuracy (como referencia adicional)
 matriz = confusion_matrix(y_test, y_pred)

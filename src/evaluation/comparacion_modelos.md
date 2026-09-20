@@ -94,31 +94,31 @@ El Recall relativamente bajo indica que el modelo todavia deja sin detectar una 
 
 ### Logistic Regression
 
-Configuracion utilizada:
+Se probaron distintas configuraciones de Logistic Regression manteniendo constante el preprocessing y la division de datos.
 
-​```python
+| Configuracion | Precision | Recall | F1-score | ROC-AUC | Accuracy |
+|---|---:|---:|---:|---:|---:|
+| Configuracion inicial | 0.6614 | 0.4516 | 0.5367 | 0.8119 | 0.7942 |
+| `class_weight="balanced"` | 0.4803 | 0.7204 | 0.5763 | 0.8117 | 0.7204 |
+| `class_weight="balanced", C=0.1` | 0.4812 | 0.7231 | 0.5779 | 0.8118 | 0.7211 |
+
+Configuracion seleccionada:
+
+```python
 LogisticRegression(
     max_iter=1000,
     random_state=42
 )
-​```
+```
 
-Metricas obtenidas:
-
-| Metrica | Valor |
-|---|---|
-| Precision | 0.6614 |
-| Recall | 0.4516 |
-| F1-score | 0.5367 |
-| ROC-AUC | 0.8119 |
-| Accuracy | 0.7942 |
+Se mantuvo la configuracion inicial como principal: aunque `class_weight="balanced"` logra un F1 levemente mayor, lo hace a costa de una caida fuerte en Precision (de 0.66 a 0.48), generando muchos mas falsos positivos. Este trade-off no fue evaluado ni acordado por el equipo, por lo que se deja documentado como variante y no como configuracion definitiva.
 
 Matriz de confusion:
 
-​```text
+```text
 [[951  86]
  [204 168]]
-​```
+```
 
 Interpretacion:
 
