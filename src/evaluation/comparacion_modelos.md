@@ -70,6 +70,12 @@ Se probo el modelo de arbol de decision con parametros standard y otras variable
 
 ** Aclaración: cada train sumo el parametro anterior.
 
+**Matriz de confusion**
+763 → Verdaderos No-Churn: clientes que no se iban, y el modelo acertó que no se iban.
+227 → Verdaderos Churn: clientes que sí se iban, y el modelo acertó que se iban.
+274 → Falsos Positivos: el modelo dijo "este se va" pero en realidad no se iba.
+145 → Falsos Negativos: el modelo dijo "este se queda" pero en realidad sí se iba.
+
 **Observaciones:**
 - El modelo standard (sin restricciones) tiene overfitting severo: F1-score de 1.0000 en train vs. 0.4771 en test.
 - Limitar la profundidad (max_depth=10) mejoro Precision y ROC-AUC, aunque bajo levemente el Recall.
