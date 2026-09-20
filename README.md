@@ -135,7 +135,7 @@ python -m src.training.pre_train_svm
 
 
 
-### 3. Entrenamiento del modelo SVM final
+### Entrenamiento del modelo SVM final
 Entrena y compara 4 configuraciones de SVM (kernel, C, class_weight) sobre el mismo split y preprocessing, e imprime Precision, Recall, F1-score, ROC-AUC, Accuracy y matriz de confusión de cada una. Es el script que generó la evidencia documentada en `src/evaluation/comparacion_modelos.md`.
 
 ```bash
