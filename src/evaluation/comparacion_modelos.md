@@ -19,12 +19,41 @@ Tambien se analizan Precision, Recall, ROC-AUC y Accuracy como metricas compleme
 
 | Modelo | Precision | Recall | F1-score | ROC-AUC | Accuracy |
 |---|---:|---:|---:|---:|---:|
-| Baseline | — | — | — | — | — |
+| Baseline | 0.0000 | 0.0000 | 0.0000 | 0.5000 | 0.7360 |
 | Logistic Regression | 0.6614 | 0.4516 | 0.5367 | 0.8119 | 0.7942 |
 | Decision Tree | — | — | — | — | — |
 | Random Forest | 0.6564 | 0.4005 | 0.4975 | 0.7930 | 0.7864 |
+| SVM  | 0.6293 | 0.4973 | 0.5556 | 0.8017 | 0.7899 |
 
 ## Detalle por modelo
+
+### Baseline (DummyClassifier)
+
+Se utilizo un DummyClassifier con `strategy="most_frequent"` como punto de referencia minimo. Al tratarse de un baseline, no se probaron variantes de configuracion.
+
+Configuracion utilizada:
+
+```python
+DummyClassifier(
+    strategy="most_frequent",
+    random_state=42
+)
+```
+
+Matriz de confusion:
+
+```text
+[[1037    0]
+ [ 372    0]]
+```
+
+Interpretacion:
+
+- 1037 clientes sin churn fueron clasificados correctamente, porque el modelo siempre predice la clase mayoritaria.
+- 372 clientes con churn no fueron detectados en ningun caso.
+- El modelo no distingue entre clases: Precision, Recall y F1-score son 0, y el ROC-AUC (0.5000) equivale a una prediccion al azar.
+
+Este resultado confirma que Accuracy sola no es una metrica adecuada para este problema: un modelo que no aprendio nada obtiene un Accuracy relativamente alto (0.7360) unicamente por el desbalance de clases.
 
 ### Random Forest
 
@@ -98,7 +127,38 @@ Interpretacion:
 - 204 clientes con churn no fueron detectados.
 - 168 clientes con churn fueron detectados correctamente.
 
-Comparado con Random Forest (F1 0.4975), Logistic Regression obtuvo mejor resultado en las cuatro metricas principales (F1 0.5367, ROC-AUC 0.8119). El Recall sigue siendo el punto debil de ambos modelos: mas de la mitad de los clientes que se van no son detectados a tiempo.
+Comparado con Random Forest (F1 0.4975), Logistic Regression obtuvo mejores resultados en Precision, Recall, F1-score, ROC-AUC y Accuracy. El Recall sigue siendo el punto debil de ambos modelos: mas de la mitad de los clientes con churn no son identificados correctamente.
+
+
+### Pruebas con el modelo SVM (Support Vector Machine)
+
+Para probar una alternativa distinta a los árboles y a la regresión logística, entrenamos un modelo SVM usando exactamente la misma partición y preprocesamiento que acordamos para todo el proyecto (`test_size=0.20`, `stratify=y`, `random_state=42`).
+Al ejecutar el entrenamiento (`train_svm.py`), obtuvimos los siguientes resultados sobre el conjunto de prueba:
+
+* **Accuracy:** 78.99%
+* **Precision:** 62.93%
+* **Recall:** 49.73%
+* **F1-score:** 55.56%
+* **ROC-AUC:** 80.17%
+
+#### ¿Qué nos muestra la matriz de confusión?
+Matriz de confusion:
+```text
+[[928 109]
+ [187 185]]
+```
+
+* **928 clientes que se quedaban** El modelo predijo correctamente que permanecían en la empresa (Verdaderos Negativos).
+* **109 clientes estables** El modelo los clasificó por error como si fueran a darse de baja (Falsos Positivos).
+* **185 clientes en riesgo real** El modelo los identificó a tiempo para poder aplicar acciones de retención (Verdaderos Positivos).
+* **187 clientes en riesgo real** El modelo no los detectó y los consideró estables (Falsos Negativos).
+
+#### Conclusión del experimento
+
+Lo positivo de probar SVM es que **mejoró la detección de clientes en fuga respecto al Random Forest inicial**: el F1-score subió de 0.4975 a 0.5556 y el Recall mejoró de 40.05% a 49.73%. 
+
+Sin embargo, el punto débil sigue siendo que se le escapan 187 clientes en riesgo (casi el 50% del total de casos de Churn). Para el negocio esto es relevante porque un falso negativo significa perder al cliente sin haber actuado preventivamente.
+
 
 ## Seleccion del modelo candidato
 
