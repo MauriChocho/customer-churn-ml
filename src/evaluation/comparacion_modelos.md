@@ -21,9 +21,9 @@ Tambien se analizan Precision, Recall, ROC-AUC y Accuracy como metricas compleme
 |---|---:|---:|---:|---:|---:|
 | Baseline | 0.0000 | 0.0000 | 0.0000 | 0.5000 | 0.7360 |
 | Logistic Regression | — | — | — | — | — |
-| Decision Tree | — | — | — | — | — |
+| Decision Tree | 0.4928 | 0.4624 | 0.4771 | 0.6458 | 0.7324 |
 | Random Forest | 0.6564 | 0.4005 | 0.4975 | 0.7930 | 0.7864 |
-| SVM  | 0.6293 | 0.4973 | 0.5556 | 0.8017 | 0.7899 |
+| SVM           | 0.6293 | 0.4973 | 0.5556 | 0.8017 | 0.7899 |
 
 ## Detalle por modelo
 
@@ -54,6 +54,20 @@ Interpretacion:
 - El modelo no distingue entre clases: Precision, Recall y F1-score son 0, y el ROC-AUC (0.5000) equivale a una prediccion al azar.
 
 Este resultado confirma que Accuracy sola no es una metrica adecuada para este problema: un modelo que no aprendio nada obtiene un Accuracy relativamente alto (0.7360) unicamente por el desbalance de clases.
+
+### Logistic Regression
+
+
+### Decision Tree
+
+Se probo el modelo de arbol de decision con parametros standard y otras variables para mejorar resultados.
+
+Configuracion | Precision | Recall | F1-score | ROC-AUC | Accuracy |
+|---|---:|---:|---:|---:|---:|
+| Standard | 0.4928 | 0.4624 | 0.4771 | 0.6458 | 0.7324 |
+|  | - | - | - | - | - |
+|  | - | - | - | - | - |
+
 
 ### Random Forest
 
