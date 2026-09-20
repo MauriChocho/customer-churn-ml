@@ -21,7 +21,7 @@ Tambien se analizan Precision, Recall, ROC-AUC y Accuracy como metricas compleme
 |---|---:|---:|---:|---:|---:|
 | Baseline | 0.0000 | 0.0000 | 0.0000 | 0.5000 | 0.7360 |
 | Logistic Regression | — | — | — | — | — |
-| Decision Tree | 0.4928 | 0.4624 | 0.4771 | 0.6458 | 0.7324 |
+| Decision Tree | 0.4527 | 0.6048 | 0.5178 | 0.7089 | 0.7026 |
 | Random Forest | 0.6564 | 0.4005 | 0.4975 | 0.7930 | 0.7864 |
 | SVM           | 0.6293 | 0.4973 | 0.5556 | 0.8017 | 0.7899 |
 
@@ -66,20 +66,20 @@ Se probo el modelo de arbol de decision con parametros standard y otras variable
 |---|---:|---:|---:|---:|---:|
 |        Standard        | 0.4928 | 0.4624 | 0.4771 | 0.6458 | 0.7324 |
 |       max_depth=10      | 0.5302 | 0.4489 | 0.4862 | 0.7041 | 0.7495 |
-| class_weight "balanced"| 0.4531 | 0.6102 | 0.5200 | 0.7137 | 0.7026 |
+| max_depth=10 + class_weight="balanced" | 0.4527 | 0.6048 | 0.5178 | 0.7089 | 0.7026 |
 
 ** Aclaración: cada train sumo el parametro anterior.
 
 **Matriz de confusion**
-763 → Verdaderos No-Churn: clientes que no se iban, y el modelo acertó que no se iban.
-227 → Verdaderos Churn: clientes que sí se iban, y el modelo acertó que se iban.
-274 → Falsos Positivos: el modelo dijo "este se va" pero en realidad no se iba.
-145 → Falsos Negativos: el modelo dijo "este se queda" pero en realidad sí se iba.
+765 → Verdaderos No-Churn: clientes que no se iban, y el modelo acerto que no se iban.
+225 → Verdaderos Churn: clientes que si se iban, y el modelo acerto que se iban.
+272 → Falsos Positivos: el modelo dijo "este se va" pero en realidad no se iba.
+147 → Falsos Negativos: el modelo dijo "este se queda" pero en realidad si se iba.
 
 **Observaciones:**
 - El modelo standard (sin restricciones) tiene overfitting severo: F1-score de 1.0000 en train vs. 0.4771 en test.
 - Limitar la profundidad (max_depth=10) mejoro Precision y ROC-AUC, aunque bajo levemente el Recall.
-- Sumar parametro class_weight="balanced" mejoro significativamente el Recall (0.4489 → 0.6102), dando el mejor F1-score general.
+- Sumar parametro class_weight="balanced" mejoro significativamente el Recall (0.4489 → 0.6048), dando el mejor F1-score general.
 
 **Mejor Configuración final:** max_depth=10 + class_weight="balanced" (mejor F1-score y mejor ROC-AUC)
 
