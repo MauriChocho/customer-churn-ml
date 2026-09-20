@@ -87,6 +87,16 @@ Los comandos deben ejecutarse desde la carpeta raiz del proyecto.
 
 Esto es importante para que Python pueda reconocer correctamente los modulos internos dentro de `src/`.
 
+### Análisis Exploratorio de Datos (EDA)
+El diagnóstico inicial de los datos se encuentra modularizado en el script `src/data/01_eda.py`. 
+El análisis completo se puede leer en `src/data/reporte_eda.md`.
+
+Para ejecutar la inspección por consola:
+
+```bash
+python -m src.data.01_eda
+```
+
 ### Validar el preprocessing
 
 Para ejecutar y validar el preprocessing comun:
@@ -115,6 +125,24 @@ El script:
 - calcula las metricas de evaluacion
 - muestra la matriz de confusion
 
+
+### Exploración de hiperparámetros de SVM
+Imprime en consola: dimensiones y tipos de datos, duplicados, validación de `customerID`, valores nulos, distribución de `Churn`, estadísticas descriptivas y relación de las variables con el target.
+
+```bash
+python -m src.training.pre_train_svm
+```
+
+
+
+### 3. Entrenamiento del modelo SVM final
+Entrena y compara 4 configuraciones de SVM (kernel, C, class_weight) sobre el mismo split y preprocessing, e imprime Precision, Recall, F1-score, ROC-AUC, Accuracy y matriz de confusión de cada una. Es el script que generó la evidencia documentada en `src/evaluation/comparacion_modelos.md`.
+
+```bash
+python -m src.training.train_svm
+```
+
+Entrena el pipeline completo (preprocessing + SVM) con la configuración elegida (`kernel="rbf", C=1.0, class_weight="balanced"`, calibrada con `CalibratedClassifierCV`) e imprime sus métricas finales.
 ### Resultados de los modelos
 
 Los resultados y la comparacion entre los distintos modelos se documentan en:
