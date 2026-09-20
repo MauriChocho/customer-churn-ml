@@ -193,6 +193,14 @@ Sin embargo, el punto débil sigue siendo que se le escapan 187 clientes en ries
 
 ## Seleccion del modelo candidato
 
-La seleccion final se realizara cuando todos los modelos hayan sido entrenados y evaluados utilizando las mismas condiciones.
+Luego de entrenar y evaluar todos los modelos bajo las mismas condiciones, se selecciono Logistic Regression como modelo candidato.
 
-El criterio principal sera el F1-score, complementado con Recall, Precision y ROC-AUC.
+La decision se tomo utilizando F1-score como metrica principal, tal como se habia definido previamente para este proyecto.
+
+Logistic Regression obtuvo un F1-score de 0.5779, el valor mas alto entre todos los modelos evaluados. Ademas, obtuvo el Recall mas alto (0.7231) y el ROC-AUC mas alto (0.8118).
+
+Estos resultados indican que el modelo logra un buen equilibrio entre Precision y Recall y, en particular, detecta una mayor proporcion de clientes que realmente presentan churn.
+
+Como contrapartida, Logistic Regression tiene una Precision menor que Random Forest y SVM, lo que significa que genera mas falsos positivos. Es decir, identifica como posibles churn a algunos clientes que finalmente no abandonan.
+
+Aun considerando este punto, se selecciona Logistic Regression como modelo candidato porque obtiene el mejor F1-score, que es la metrica principal acordada para comparar los modelos, y porque tambien presenta el mejor Recall y ROC-AUC entre las alternativas probadas.
