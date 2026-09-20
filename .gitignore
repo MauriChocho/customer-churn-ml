@@ -10,7 +10,7 @@ __pycache__/
 
 # Jupyter
 .ipynb_checkpoints/
-
+git status
 # Datos (los versiona DVC)
 data/raw/*
 !data/raw/*.dvc
@@ -22,6 +22,7 @@ data/scoring/*
 # Modelos entrenados (pesados)
 models/*
 !models/.gitkeep
+!models/*.dvc
 
 # Variables de entorno / credenciales
 .env

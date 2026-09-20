@@ -1,0 +1,5 @@
+outs:
+- md5: 501738b9f627b5a826a8db40b53d8d1f
+  size: 8538
+  hash: md5
+  path: churn_pipeline.joblib
