@@ -1,40 +1,43 @@
-# Imports
-# Librerias necesarias para cargar el pipeline serializado
+# Inferencia: carga del modelo y prediccion
+# Adaptado del script de prueba de serializacion
 
-import pandas as pd
-import joblib
 from pathlib import Path
+
+import joblib
 
 
 # Ruta del modelo
-# Define la ubicacion del pipeline entrenado
-
-MODEL_PATH = Path("models") / "churn_pipeline.joblib"
-
-
-# Cargar pipeline
-# Carga el pipeline entrenado desde el archivo serializado
-
-pipeline = joblib.load(MODEL_PATH)
+# Se calcula desde la ubicacion de este archivo (src/inference/predict.py),
+# asi funciona sin importar desde que carpeta se ejecute
+RAIZ_PROYECTO = Path(__file__).resolve().parents[2]
+MODEL_PATH = RAIZ_PROYECTO / "models" / "churn_pipeline.joblib"
 
 
-# Cargar datos para prueba
-# Carga el dataset historico y prepara las variables de entrada
+def cargar_modelo(ruta=MODEL_PATH):
+    # Carga el pipeline completo (preprocessing + modelo) desde el archivo serializado
+    ruta = Path(ruta)
 
-df = pd.read_csv("data/raw/customer_churn_historical.csv")
+    if not ruta.exists():
+        raise FileNotFoundError(
+            f"No se encontro el modelo en {ruta}. "
+            "Descargalo con: dvc pull models/churn_pipeline.joblib.dvc"
+        )
 
-X = df.drop(columns=["Churn", "customerID"])
-
-
-# Seleccionar un cliente de prueba
-# Toma una sola fila para simular una nueva prediccion
-
-cliente_prueba = X.iloc[[0]]
+    return joblib.load(ruta)
 
 
-# Realizar prediccion
-# Usa el pipeline cargado para predecir churn del cliente seleccionado
+# Prueba manual
+# Solo corre si se ejecuta este archivo directamente, no al importarlo
+if __name__ == "__main__":
+    import pandas as pd
 
-prediccion = pipeline.predict(cliente_prueba)
+    pipeline = cargar_modelo()
 
-print("Prediccion:", prediccion)
+    df = pd.read_csv(RAIZ_PROYECTO / "data" / "raw" / "customer_churn_historical.csv")
+    X = df.drop(columns=["Churn", "customerID"])
+
+    # Toma una sola fila para simular una nueva prediccion
+    cliente_prueba = X.iloc[[0]]
+
+    prediccion = pipeline.predict(cliente_prueba)
+    print("Prediccion:", prediccion)
