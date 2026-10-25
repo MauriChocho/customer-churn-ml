@@ -8,3 +8,4 @@ dvc
 joblib
 mlflow==3.16.0
 dagshub==0.7.2
+pytest
