@@ -92,6 +92,98 @@ Los comandos deben ejecutarse desde la carpeta raiz del proyecto.
 
 Esto es importante para que Python pueda reconocer correctamente los modulos internos dentro de `src/`.
 
+### Seguimiento de experimentos con MLflow y DagsHub
+
+El proyecto utiliza MLflow integrado con DagsHub para registrar y comparar los resultados de los modelos de clasificacion de churn.
+
+Para evitar repetir codigo en cada script de entrenamiento, se crearon dos funciones compartidas en `src/utils/mlflow_utils.py`:
+
+- `configurar_mlflow()`: configura la conexion con DagsHub y selecciona el experimento compartido `churn-classification`.
+- `registrar_experimento()`: registra el nombre de la ejecucion, los parametros, las metricas, las etiquetas y el pipeline entrenado.
+
+Los cinco modelos utilizan el mismo experimento para facilitar la comparacion de sus resultados.
+
+#### Configurar MLflow
+
+Para utilizar las funciones compartidas, cada script de entrenamiento debe importarlas desde `src/utils/mlflow_utils.py`:
+
+```python
+from src.utils.mlflow_utils import configurar_mlflow, registrar_experimento
+```
+
+Antes de comenzar el entrenamiento, se debe configurar la conexión con DagsHub:
+
+```python
+configurar_mlflow()
+```
+
+Esta función utiliza el repositorio `MauriChocho/customer-churn-ml` y selecciona el experimento `churn-classification`.
+
+La primera vez que se ejecute, DagsHub puede solicitar autorización desde el navegador. Cada integrante debe utilizar su propia cuenta y tener los permisos correspondientes.
+
+No se deben incluir contraseñas ni tokens de acceso en el código.
+
+#### Registrar un entrenamiento
+
+Después de entrenar el modelo y calcular las métricas, se deben preparar los parámetros, las métricas y las etiquetas que se enviarán a MLflow.
+
+Por ejemplo:
+
+```python
+parametros = model_pipeline.named_steps["model"].get_params()
+
+metricas = {
+    "precision": precision,
+    "recall": recall,
+    "f1": f1,
+    "roc_auc": roc_auc,
+    "accuracy": accuracy
+}
+
+etiquetas = {
+    "modelo": "RandomForest"
+}
+```
+
+Luego se utiliza la función compartida para registrar el entrenamiento:
+
+```python
+registrar_experimento(
+    nombre_run="random_forest",
+    parametros=parametros,
+    metricas=metricas,
+    etiquetas=etiquetas,
+    pipeline=model_pipeline
+)
+```
+
+Cada integrante debe adaptar `nombre_run` y la etiqueta `modelo` a su algoritmo, conservando los mismos nombres de métricas para facilitar la comparación.
+
+La función registra el pipeline completo, incluyendo el preprocesamiento y el modelo entrenado, utilizando el formato `cloudpickle`.
+
+#### Pruebas automáticas de MLflow
+
+Las funciones compartidas tienen pruebas automáticas en `test/test_mlflow_utils.py`.
+
+Para ejecutarlas, desde la carpeta raíz del proyecto:
+
+```bash
+python -m pytest test/test_mlflow_utils.py -v
+```
+
+Se realizan dos pruebas:
+
+- `test_configurar_mlflow`: verifica la configuración del repositorio de DagsHub y del experimento compartido.
+- `test_registrar_experimento`: verifica el registro de parámetros, métricas, etiquetas y pipeline, incluyendo el formato `cloudpickle`.
+
+Las pruebas utilizan `monkeypatch` para simular las llamadas a MLflow, por lo que no necesitan conectarse realmente a DagsHub.
+
+Resultado verificado:
+
+```text
+2 passed
+```
+
 ### Análisis Exploratorio de Datos (EDA)
 El diagnóstico inicial de los datos se encuentra modularizado en el script `src/data/01_eda.py`. 
 El análisis completo se puede leer en `src/data/reporte_eda.md`.
