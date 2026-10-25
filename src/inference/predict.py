@@ -4,6 +4,13 @@
 from pathlib import Path
 
 import joblib
+import pandas as pd
+
+from src.features.preprocessing import (
+    NUMERIC_FEATURES,
+    BINARY_FEATURES,
+    CATEGORICAL_FEATURES,
+)
 
 
 # Ruta del modelo
@@ -11,6 +18,18 @@ import joblib
 # asi funciona sin importar desde que carpeta se ejecute
 RAIZ_PROYECTO = Path(__file__).resolve().parents[2]
 MODEL_PATH = RAIZ_PROYECTO / "models" / "churn_pipeline.joblib"
+
+# Columnas que el pipeline espera como entrada (se reutilizan las del preprocessing)
+COLUMNAS_ENTRADA = NUMERIC_FEATURES + BINARY_FEATURES + CATEGORICAL_FEATURES
+
+# Etiquetas de la prediccion
+ETIQUETA_CHURN = "CHURN"
+ETIQUETA_NO_CHURN = "NO_CHURN"  # PENDIENTE DE DECISION DEL EQUIPO
+
+# Umbrales de risk_level
+# PENDIENTE DE DECISION DEL EQUIPO: valores provisorios solo para que el codigo corra
+UMBRAL_MEDIUM = 0.30
+UMBRAL_HIGH = 0.50
 
 
 def cargar_modelo(ruta=MODEL_PATH):
@@ -26,11 +45,42 @@ def cargar_modelo(ruta=MODEL_PATH):
     return joblib.load(ruta)
 
 
+def calcular_risk_level(probability):
+    # Convierte la probabilidad de churn en un nivel de riesgo
+    if probability >= UMBRAL_HIGH:
+        return "HIGH"
+    if probability >= UMBRAL_MEDIUM:
+        return "MEDIUM"
+    return "LOW"
+
+
+def predecir(pipeline, datos_cliente, model_version):
+    # Recibe un diccionario con los datos de un cliente y devuelve la prediccion
+
+    # Validar que esten todas las columnas que necesita el pipeline
+    faltantes = [col for col in COLUMNAS_ENTRADA if col not in datos_cliente]
+    if faltantes:
+        raise ValueError(f"Faltan columnas en los datos del cliente: {faltantes}")
+
+    # Armar un DataFrame de una fila con las columnas esperadas
+    # (si llegan columnas de mas, como customerID, se ignoran)
+    cliente = pd.DataFrame([datos_cliente], columns=COLUMNAS_ENTRADA)
+
+    # El pipeline ya incluye el preprocessing, no hay que transformar nada antes
+    clase = int(pipeline.predict(cliente)[0])
+    probabilidad = float(pipeline.predict_proba(cliente)[0, 1])
+
+    return {
+        "prediction": ETIQUETA_CHURN if clase == 1 else ETIQUETA_NO_CHURN,
+        "probability": probabilidad,
+        "risk_level": calcular_risk_level(probabilidad),
+        "model_version": str(model_version),
+    }
+
+
 # Prueba manual
 # Solo corre si se ejecuta este archivo directamente, no al importarlo
 if __name__ == "__main__":
-    import pandas as pd
-
     pipeline = cargar_modelo()
 
     df = pd.read_csv(RAIZ_PROYECTO / "data" / "raw" / "customer_churn_historical.csv")
@@ -41,3 +91,7 @@ if __name__ == "__main__":
 
     prediccion = pipeline.predict(cliente_prueba)
     print("Prediccion:", prediccion)
+
+    # Prueba de la funcion predecir con el mismo cliente
+    resultado = predecir(pipeline, X.iloc[0].to_dict(), model_version="sin-definir")
+    print("Resultado:", resultado)
