@@ -2,6 +2,7 @@
 import dagshub
 import mlflow
 import mlflow.sklearn
+from sklearn import pipeline
 
 
 # Configurar la conexión con MLflow y DagsHub
@@ -31,5 +32,9 @@ def registrar_experimento(nombre_run, parametros, metricas, etiquetas, pipeline)
         # Registrar las etiquetas asociadas al modelo
         mlflow.set_tags(etiquetas)
 
-        # Registrar el pipeline completo de machine learning
-        mlflow.sklearn.log_model(pipeline, name="model")
+        # Registrar el pipeline completo de machine learning utilizando cloudpickle
+        mlflow.sklearn.log_model(
+            pipeline,
+            name="model",
+            serialization_format="cloudpickle"
+        )      

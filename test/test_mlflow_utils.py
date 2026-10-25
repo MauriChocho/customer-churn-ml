@@ -65,9 +65,10 @@ def test_registrar_experimento(monkeypatch):
     monkeypatch.setattr(mlflow, "set_tags", simular_set_tags)
     
     # Simular el registro del pipeline entrenado
-    def simular_log_model(pipeline, name):
+    def simular_log_model(pipeline, name, serialization_format):
         llamadas["pipeline"] = pipeline
         llamadas["nombre_modelo"] = name
+        llamadas["formato"] = serialization_format
 
     monkeypatch.setattr(mlflow.sklearn, "log_model", simular_log_model)
     
@@ -109,3 +110,4 @@ def test_registrar_experimento(monkeypatch):
     assert llamadas["etiquetas"] == etiquetas
     assert llamadas["pipeline"] is pipeline
     assert llamadas["nombre_modelo"] == "model"
+    assert llamadas["formato"] == "cloudpickle"
