@@ -218,6 +218,7 @@ El script:
 - entrena un DummyClassifier como referencia minima
 - calcula las metricas de evaluacion
 - muestra la matriz de confusion
+- registra los parametros, las metricas, las etiquetas y el pipeline entrenado en MLflow/DagsHub
 
 
  Este modelo se utiliza como referencia minima para comparar el rendimiento de los demas modelos
