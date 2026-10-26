@@ -9,6 +9,8 @@ from sklearn.pipeline import Pipeline
 
 from src.features.preprocessing import ID_COL, TARGET, build_preprocessor
 
+#Importamos funciones compartidas para registrar el entrenamiento en MLflow
+from src.utils.mlflow_utils import configurar_mlflow, registrar_experimento
 
 import matplotlib.pyplot as plt
 from sklearn.metrics import (
@@ -21,6 +23,8 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
+# Configurar MLflow para registrar el entrenamiento en DagsHub
+configurar_mlflow()
 
 # Ruta del dataset
 DATA_PATH = Path("data/raw/customer_churn_historical.csv")
@@ -88,6 +92,32 @@ accuracy = accuracy_score(y_test, y_pred)
 y_train_pred = model_pipeline.predict(X_train)
 f1_train = f1_score(y_train, y_train_pred)
 accuracy_train = accuracy_score(y_train, y_train_pred)
+
+#Parametros del modelo decision tree
+parametros = model_pipeline.get_params()["model"].get_params()
+
+# Metricas a registrar en MLflow
+metricas = {
+    "precision": precision,
+    "recall": recall,
+    "f1": f1,
+    "roc_auc": roc_auc,
+    "accuracy": accuracy,
+    }
+
+# Etiquetas para identificar el modelo
+etiquetas = {
+    "modelo": "Decision Tree"
+}
+
+# Registrar el entrenamiento de Decision Tree en MLflow
+registrar_experimento(
+    nombre_run="decision_tree",
+    parametros=parametros,
+    metricas=metricas,
+    etiquetas=etiquetas,
+    pipeline=model_pipeline
+)
 
 # Validacion del split
 print("Forma de X_train:", X_train.shape)
