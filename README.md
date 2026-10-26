@@ -184,6 +184,53 @@ Resultado verificado:
 2 passed
 ```
 
+#### Pruebas de datos y preprocesamiento
+
+Verifican que el dataset tenga la estructura esperada y que el preprocesamiento
+maneje correctamente los valores faltantes.
+
+Requisito: haber ejecutado `dvc pull`, ya que `test_dataset.py` utiliza el dataset real.
+
+Para ejecutarlas, desde la carpeta raíz del proyecto:
+
+```bash
+python -m pytest test/test_dataset.py test/test_valores_faltantes.py -v
+```
+
+`test_dataset.py` utiliza el dataset local `data/raw/customer_churn_historical.csv`.
+
+> Si el archivo no está, la prueba lo indica; se recupera con `dvc checkout` o `dvc pull`.
+
+**`test/test_dataset.py`** — estructura del dataset histórico:
+
+- `test_columnas_obligatorias`: existen todas las columnas que usa el preprocessing, más `customerID` y `Churn`.
+- `test_tipos_numericos`: `tenure`, `MonthlyCharges`, `TotalCharges` y `SeniorCitizen` son numéricas.
+- `test_valores_target`: `Churn` solo contiene `Yes` y `No`.
+- `test_senior_citizen_binaria`: `SeniorCitizen` está codificada como 0/1.
+- `test_customer_id_unico`: no hay clientes duplicados.
+
+**`test/test_valores_faltantes.py`** — manejo de nulos en el preprocessing:
+
+Utiliza un pequeño conjunto de clientes construido dentro de la prueba, por lo que no depende del CSV.
+
+- `test_total_charges_faltante`: completa un `TotalCharges` vacío (caso detectado en el EDA: 26 nulos).
+- `test_varios_numericos_faltantes`: completa nulos en varias columnas numéricas a la vez.
+- `test_faltante_en_datos_nuevos`: un preprocesador ya entrenado completa nulos en un cliente nuevo, como ocurrirá en inferencia.
+
+En todos los casos se verifica que no queden nulos y que no se pierdan registros.
+
+Resultado verificado:
+
+```text
+8 passed
+```
+
+Para ejecutar todas las pruebas del proyecto:
+
+```bash
+python -m pytest test/ -v
+```
+
 ### Análisis Exploratorio de Datos (EDA)
 El diagnóstico inicial de los datos se encuentra modularizado en el script `src/data/01_eda.py`. 
 El análisis completo se puede leer en `src/data/reporte_eda.md`.
