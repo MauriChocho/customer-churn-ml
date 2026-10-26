@@ -159,7 +159,7 @@ registrar_experimento(
 
 Cada integrante debe adaptar `nombre_run` y la etiqueta `modelo` a su algoritmo, conservando los mismos nombres de métricas para facilitar la comparación.
 
-La función registra el pipeline completo, incluyendo el preprocesamiento y el modelo entrenado, utilizando el formato `cloudpickle`.
+La función registra el pipeline completo, incluyendo el preprocesamiento y el modelo entrenado, utilizando el formato `cloudpickle`. Se utiliza cloudpickle porque, durante las pruebas con Random Forest, el formato skops presentó un error al serializar algunos componentes del modelo. Con cloudpickle se pudo registrar correctamente el pipeline completo en DagsHub.
 
 #### Pruebas automáticas de MLflow
 
@@ -240,6 +240,7 @@ El script:
 - entrena el modelo
 - calcula las metricas de evaluacion
 - muestra la matriz de confusion
+- registra los parametros, las metricas, las etiquetas y el pipeline entrenado en MLflow/DagsHub
 
 
 ### Exploración de configuraciones de SVM
