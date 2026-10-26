@@ -2,7 +2,6 @@
 import dagshub
 import mlflow
 import mlflow.sklearn
-from sklearn import pipeline
 
 
 # Configurar la conexión con MLflow y DagsHub
