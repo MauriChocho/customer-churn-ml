@@ -36,3 +36,6 @@ models/*
 .vscode/
 *.swp
 >>>>>>> 1552fbe890b0da7a83af34b88ebd34efce688256
+
+# Base de datos local de MLflow
+mlflow.db

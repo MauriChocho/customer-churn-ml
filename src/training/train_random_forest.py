@@ -10,6 +10,9 @@ from sklearn.pipeline import Pipeline
 
 from src.features.preprocessing import ID_COL, TARGET, build_preprocessor
 
+# Importar funciones compartidas para registrar el entrenamiento en MLflow
+from src.utils.mlflow_utils import configurar_mlflow, registrar_experimento
+
 
 import matplotlib.pyplot as plt
 from sklearn.metrics import (
@@ -22,6 +25,8 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
+# Configurar MLflow para registrar el entrenamiento en DagsHub
+configurar_mlflow()
 
 # Ruta del dataset
 DATA_PATH = Path("data/raw/customer_churn_historical.csv")
@@ -82,6 +87,33 @@ recall = recall_score(y_test, y_pred)
 f1 = f1_score(y_test, y_pred)
 roc_auc = roc_auc_score(y_test, y_proba)
 accuracy = accuracy_score(y_test, y_pred)
+
+# Obtener los parámetros utilizados por Random Forest
+parametros = model_pipeline.named_steps["model"].get_params()
+
+# Preparar las métricas para registrar en MLflow
+metricas = {
+    "precision": precision,
+    "recall": recall,
+    "f1": f1,
+    "roc_auc": roc_auc,
+    "accuracy": accuracy
+}
+
+# Preparar las etiquetas para identificar el modelo
+etiquetas = {
+    "modelo": "RandomForest"
+}
+
+# Registrar el entrenamiento de Random Forest en MLflow
+registrar_experimento(
+    nombre_run="random_forest",
+    parametros=parametros,
+    metricas=metricas,
+    etiquetas=etiquetas,
+    pipeline=model_pipeline
+)
+
 
 # Validacion del split
 print("Forma de X_train:", X_train.shape)
