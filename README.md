@@ -294,6 +294,7 @@ El script:
 - calcula F1-Score y Accuracy sobre train para evaluar posible overfitting
 - muestra matriz de confusion
 - genera grafico de la matriz
+- registra los parametros, las metricas, las etiquetas y el pipeline entrenado en MLflow/DagsHub
 
 
 ### Entrenar y evaluar Logistic Regression
