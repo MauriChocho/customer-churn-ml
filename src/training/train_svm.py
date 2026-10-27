@@ -21,6 +21,13 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
+# Importar funciones compartidas para registrar el entrenamiento en MLflow
+from src.utils.mlflow_utils import configurar_mlflow, registrar_experimento
+
+
+# Configurar MLflow para registrar el entrenamiento en DagsHub
+configurar_mlflow()
+
 
 # Ruta del dataset
 DATA_PATH = Path("data/raw/customer_churn_historical.csv")
@@ -81,6 +88,41 @@ y_proba = model_pipeline.predict_proba(X_test)[:, 1]
 
 # Calcular matriz de confusion
 cm = confusion_matrix(y_test, y_pred)
+
+
+# Obtener los parámetros del SVM y de la calibración
+# Se toman de svm_base porque model_pipeline.named_steps["model"] es el
+# CalibratedClassifierCV, y su get_params() mezcla los parámetros del SVC
+# con un objeto entero, cosa que en MLflow queda poco legible
+calibrador = model_pipeline.named_steps["model"]
+
+parametros = svm_base.get_params()
+parametros["calibracion_method"] = calibrador.method
+parametros["calibracion_ensemble"] = calibrador.ensemble
+parametros["calibracion_cv"] = calibrador.cv
+
+# Preparar las métricas con las claves acordadas
+metricas = {
+    "precision": precision,
+    "recall": recall,
+    "f1": f1,
+    "roc_auc": roc_auc,
+    "accuracy": accuracy,
+}
+
+# Preparar las etiquetas para identificar el modelo
+etiquetas = {
+    "modelo": "SVM",
+}
+
+# Registrar el entrenamiento del SVM en MLflow
+registrar_experimento(
+    nombre_run="svm",
+    parametros=parametros,
+    metricas=metricas,
+    etiquetas=etiquetas,
+    pipeline=model_pipeline,
+)
 
 # Calcular metricas
 precision = precision_score(y_test, y_pred)
