@@ -12,6 +12,12 @@ from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_sco
 
 from src.features.preprocessing import TARGET, ID_COL, build_preprocessor
 
+# MLflow: funciones compartidas para registrar el entrenamiento
+from src.utils.mlflow_utils import configurar_mlflow, registrar_experimento
+
+# MLflow: configurar la conexion con DagsHub
+configurar_mlflow()
+
 # Cargar datos historicos
 df = pd.read_csv("data/raw/customer_churn_historical.csv")
 
@@ -75,6 +81,29 @@ accuracy = accuracy_score(y_test, y_pred)
 print("Accuracy (referencia, no es la metrica principal):", round(accuracy, 4))
 print("Matriz de confusion:")
 print(matriz)
+
+# MLflow: registrar el entrenamiento de Logistic Regression
+parametros = modelo_logreg.get_params()["model"].get_params()
+
+metricas = {
+    "precision": precision,
+    "recall": recall,
+    "f1": f1,
+    "roc_auc": roc_auc,
+    "accuracy": accuracy,
+}
+
+etiquetas = {
+    "modelo": "Logistic Regression"
+}
+
+registrar_experimento(
+    nombre_run="logistic_regression",
+    parametros=parametros,
+    metricas=metricas,
+    etiquetas=etiquetas,
+    pipeline=modelo_logreg
+)
 
 # Guardar el pipeline completo entrenado
 MODEL_DIR = Path("models")
