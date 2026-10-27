@@ -90,6 +90,13 @@ y_proba = model_pipeline.predict_proba(X_test)[:, 1]
 cm = confusion_matrix(y_test, y_pred)
 
 
+# Calcular metricas
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+f1 = f1_score(y_test, y_pred)
+roc_auc = roc_auc_score(y_test, y_proba)
+accuracy = accuracy_score(y_test, y_pred)
+
 # Obtener los parámetros del SVM y de la calibración
 # Se toman de svm_base porque model_pipeline.named_steps["model"] es el
 # CalibratedClassifierCV, y su get_params() mezcla los parámetros del SVC
@@ -124,13 +131,6 @@ registrar_experimento(
     pipeline=model_pipeline,
 )
 
-# Calcular metricas
-precision = precision_score(y_test, y_pred)
-recall = recall_score(y_test, y_pred)
-f1 = f1_score(y_test, y_pred)
-roc_auc = roc_auc_score(y_test, y_proba)
-accuracy = accuracy_score(y_test, y_pred)
-
 # Validacion del split
 print("Forma de X_train:", X_train.shape)
 print("Forma de X_test:", X_test.shape)
@@ -154,3 +154,4 @@ print(f"Accuracy: {accuracy:.4f}")
 
 print("\nMatriz de confusion:")
 print(cm)
+
