@@ -362,6 +362,8 @@ El script:
 - calcula Precision, Recall, F1-score, ROC-AUC y Accuracy
 - muestra la matriz de confusion
 - guarda el pipeline completo entrenado en models/churn_pipeline.joblib
+- registra los parametros, las metricas, las etiquetas y el pipeline entrenado en MLflow/DagsHub
+
 
 Este modelo fue seleccionado como modelo candidato del proyecto.
 
@@ -392,19 +394,77 @@ El detalle completo de la comparacion y la justificacion de la seleccion se encu
 `src/evaluation/comparacion_modelos.md`
 
 
-## Probar el pipeline serializado
+## Inferencia: cargar el modelo y predecir
 
-El modelo candidato se guarda como un pipeline completo en:
+El módulo `src/inference/predict.py` carga el pipeline entrenado (preprocessing + modelo) y devuelve la predicción de un cliente. No repite ninguna transformación: el preprocessing ya está dentro del pipeline.
 
-`models/churn_pipeline.joblib`
-
-Para comprobar que el pipeline puede cargarse y utilizarse para realizar predicciones:
+Antes de usarlo hay que descargar el modelo (para configurar el acceso a DagsHub, ver "Cómo levantar el proyecto"):
 
 ```bash
+dvc pull models/churn_pipeline.joblib.dvc
+```
+
+### Uso
+
+```python
+from src.inference.predict import cargar_modelo, predecir
+
+pipeline = cargar_modelo()
+
+cliente = {
+    "gender": "Female",
+    "SeniorCitizen": 0,
+    "Partner": "Yes",
+    "Dependents": "No",
+    "tenure": 12,
+    "PhoneService": "Yes",
+    "MultipleLines": "No",
+    "InternetService": "Fiber optic",
+    "OnlineSecurity": "No",
+    "OnlineBackup": "No",
+    "DeviceProtection": "No",
+    "TechSupport": "No",
+    "StreamingTV": "No",
+    "StreamingMovies": "No",
+    "Contract": "Month-to-month",
+    "PaperlessBilling": "Yes",
+    "PaymentMethod": "Electronic check",
+    "MonthlyCharges": 70.5,
+    "TotalCharges": 846.0,
+}
+
+resultado = predecir(pipeline, cliente, model_version="1")
+print(resultado)
+```
+
+El cliente es un diccionario con las 19 columnas que espera el pipeline (sin `customerID`).
+
+### Respuesta
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `prediction` | texto | `CHURN` o `NO_CHURN` (el nombre de la clase 0 está pendiente de confirmar por el equipo) |
+| `probability` | número entre 0 y 1 | probabilidad estimada de abandono |
+| `risk_level` | texto | `LOW`, `MEDIUM` o `HIGH` |
+| `model_version` | texto | versión del modelo que se le pasa a la función |
+
+El nivel de riesgo se calcula con `UMBRAL_MEDIUM` y `UMBRAL_HIGH`, definidos al inicio de `predict.py`.
+**Pendiente:** los valores finales y su justificación se definen con el equipo a partir del análisis de umbrales; esta sección se completa cuando estén acordados.
+
+### Errores
+
+- Si falta una columna, `predecir` lanza un `ValueError` que indica cuáles faltan.
+- Si llegan columnas de más (por ejemplo `customerID`), se ignoran.
+- Si no está el modelo, `cargar_modelo` lanza un `FileNotFoundError` que indica el comando `dvc pull`.
+
+### Pruebas
+
+```bash
+python -m pytest test/test_inferencia.py -v
 python -m src.inference.predict
+```
 
-
-El script carga el pipeline serializado y realiza una prediccion de prueba.
+El segundo comando es una prueba manual con el primer cliente del dataset (requiere tener descargado `data/raw/customer_churn_historical.csv` con DVC).
 
 ## Reproduccion del flujo
 
