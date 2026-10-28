@@ -392,6 +392,31 @@ El detalle completo de la comparacion y la justificacion de la seleccion se encu
 `src/evaluation/comparacion_modelos.md`
 
 
+## Análisis de umbrales de riesgo
+
+Para definir los niveles de riesgo LOW, MEDIUM y HIGH, se compararon tres propuestas utilizando las probabilidades de Logistic Regression obtenidas mediante validación cruzada sobre los datos de entrenamiento.
+
+| Propuesta | MEDIUM desde | HIGH desde | Abandonos en LOW | Abandonos en HIGH |
+|---|---:|---:|---:|---:|
+| A | 0.30 | 0.50 | 126 | 1135 |
+| B | 0.20 | 0.50 | 68 | 1135 |
+| C | 0.30 | 0.60 | 126 | 979 |
+
+Se seleccionó la **propuesta B (0.20 / 0.50)**, priorizando reducir los abandonos reales clasificados como LOW, sin disminuir los abandonos identificados en HIGH.
+
+Los niveles definidos son:
+- **LOW:** score menor a 0.20.
+- **MEDIUM:** score desde 0.20 hasta menos de 0.50.
+- **HIGH:** score igual o mayor a 0.50.
+
+La metodología, los resultados completos y las limitaciones del análisis están documentados en [justificacion_umbrales.md](src/evaluation/justificacion_umbrales.md).
+
+Para reproducir el análisis:
+
+```bash
+python -m src.evaluation.analisis_umbrales
+```
+
 ## Probar el pipeline serializado
 
 El modelo candidato se guarda como un pipeline completo en:
