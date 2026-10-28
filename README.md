@@ -391,6 +391,28 @@ El detalle completo de la comparacion y la justificacion de la seleccion se encu
 
 `src/evaluation/comparacion_modelos.md`
 
+### Modelo registrado en el Model Registry
+
+El modelo candidato esta registrado en el Model Registry de MLflow, en el DagsHub del equipo:
+
+- Nombre: `churn_logistic_regression`
+- Version: 1
+- Origen: run `logistic_regression` del experimento `churn-classification` (Run ID `a1033ab77d204947a0cd51e8eaafc3ae`, commit `ee6fd3b`)
+
+Para cargar esta version desde Python:
+
+```python
+import dagshub
+import mlflow
+
+dagshub.init(repo_owner="MauriChocho", repo_name="customer-churn-ml", mlflow=True)
+
+modelo = mlflow.sklearn.load_model("models:/churn_logistic_regression/1")
+```
+
+El resultado es el pipeline completo, con los pasos `preprocessing` y `model`.
+
+Para conectarse a DagsHub hay que contar con acceso al repositorio. La primera vez puede solicitar autorizacion desde el navegador. No se deben incluir contraseñas ni tokens en el codigo.
 
 ## Probar el pipeline serializado
 
