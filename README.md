@@ -393,6 +393,53 @@ El detalle completo de la comparacion y la justificacion de la seleccion se encu
 
 `src/evaluation/comparacion_modelos.md`
 
+### Modelo registrado en el Model Registry
+
+El modelo candidato esta registrado en el Model Registry de MLflow, en el DagsHub del equipo:
+
+- Nombre: `churn_logistic_regression`
+- Version: 1
+- Origen: run `logistic_regression` del experimento `churn-classification` (Run ID `a1033ab77d204947a0cd51e8eaafc3ae`, commit `ee6fd3b`)
+
+Para cargar esta version desde Python:
+
+```python
+import dagshub
+import mlflow
+
+dagshub.init(repo_owner="MauriChocho", repo_name="customer-churn-ml", mlflow=True)
+
+modelo = mlflow.sklearn.load_model("models:/churn_logistic_regression/1")
+```
+
+El resultado es el pipeline completo, con los pasos `preprocessing` y `model`.
+
+Para conectarse a DagsHub hay que contar con acceso al repositorio. La primera vez puede solicitar autorizacion desde el navegador. No se deben incluir contraseñas ni tokens en el codigo.
+
+## Análisis de umbrales de riesgo
+
+Para definir los niveles de riesgo LOW, MEDIUM y HIGH, se compararon tres propuestas utilizando las probabilidades de Logistic Regression obtenidas mediante validación cruzada sobre los datos de entrenamiento.
+
+| Propuesta | MEDIUM desde | HIGH desde | Abandonos en LOW | Abandonos en HIGH |
+|---|---:|---:|---:|---:|
+| A | 0.30 | 0.50 | 126 | 1135 |
+| B | 0.20 | 0.50 | 68 | 1135 |
+| C | 0.30 | 0.60 | 126 | 979 |
+
+Se seleccionó la **propuesta B (0.20 / 0.50)**, priorizando reducir los abandonos reales clasificados como LOW, sin disminuir los abandonos identificados en HIGH.
+
+Los niveles definidos son:
+- **LOW:** score menor a 0.20.
+- **MEDIUM:** score desde 0.20 hasta menos de 0.50.
+- **HIGH:** score igual o mayor a 0.50.
+
+La metodología, los resultados completos y las limitaciones del análisis están documentados en [justificacion_umbrales.md](src/evaluation/justificacion_umbrales.md).
+
+Para reproducir el análisis:
+
+```bash
+python -m src.evaluation.analisis_umbrales
+```
 
 ## Inferencia: cargar el modelo y predecir
 
