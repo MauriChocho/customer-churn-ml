@@ -495,8 +495,15 @@ El cliente es un diccionario con las 19 columnas que espera el pipeline (sin `cu
 | `risk_level` | texto | `LOW`, `MEDIUM` o `HIGH` |
 | `model_version` | texto | versión del modelo que se le pasa a la función |
 
-El nivel de riesgo se calcula con `UMBRAL_MEDIUM` y `UMBRAL_HIGH`, definidos al inicio de `predict.py`.
-**Pendiente:** los valores finales y su justificación se definen con el equipo a partir del análisis de umbrales; esta sección se completa cuando estén acordados.
+El nivel de riesgo se calcula con `UMBRAL_MEDIUM` y `UMBRAL_HIGH`, definidos al inicio de `predict.py` y acordados por el equipo (propuesta B):
+
+| Nivel | Probabilidad de abandono |
+|---|---|
+| `LOW` | menor a 0,20 |
+| `MEDIUM` | desde 0,20 y menor a 0,50 |
+| `HIGH` | desde 0,50 |
+
+El análisis y la justificación de estos valores están en la sección "Análisis de umbrales de riesgo" de este README y en [justificacion_umbrales.md](src/evaluation/justificacion_umbrales.md). Si se cambian los umbrales, hay que actualizar también la prueba `test_umbrales_acordados_por_el_equipo`.
 
 ### Errores
 
