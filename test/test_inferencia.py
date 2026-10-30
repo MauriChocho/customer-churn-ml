@@ -96,3 +96,8 @@ def test_risk_level_respeta_los_umbrales():
     assert calcular_risk_level(UMBRAL_MEDIUM) == "MEDIUM"
     assert calcular_risk_level(UMBRAL_HIGH) == "HIGH"
     assert calcular_risk_level(1.0) == "HIGH"
+def test_umbrales_acordados_por_el_equipo():
+    # Umbrales acordados por el equipo (propuesta B)
+    # Si se cambian a proposito, hay que actualizar esta prueba
+    assert UMBRAL_MEDIUM == 0.20
+    assert UMBRAL_HIGH == 0.50

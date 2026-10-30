@@ -27,8 +27,9 @@ ETIQUETA_CHURN = "CHURN"
 ETIQUETA_NO_CHURN = "NO_CHURN"  # PENDIENTE DE DECISION DEL EQUIPO
 
 # Umbrales de risk_level
-# PENDIENTE DE DECISION DEL EQUIPO: valores provisorios solo para que el codigo corra
-UMBRAL_MEDIUM = 0.30
+# Acordados por el equipo (propuesta B), segun el analisis de umbrales
+# Justificacion en src/evaluation/justificacion_umbrales.md
+UMBRAL_MEDIUM = 0.20
 UMBRAL_HIGH = 0.50
 
 
