@@ -584,6 +584,52 @@ python -m pytest test/test_contrato_entrada.py -v
 
 Las pruebas se pueden ejecutar sin tener descargados el dataset ni el modelo. Se verifica que se pueda ingresar un cliente válido y que se rechacen los datos incompletos, las categorías que no pertenecen al dataset, los valores fuera de rango y los tipos incorrectos. También se comprueba que los campos definidos en el contrato coincidan con las columnas que utiliza el pipeline.
 
+## API (FastAPI)
+
+La API expone el modelo como un servicio HTTP. El modelo se carga una sola vez al
+iniciar la aplicación, y su versión se toma de `models/model_meta.json`.
+
+### Levantar la API
+
+Desde la carpeta raíz del proyecto, con el entorno virtual activado:
+
+```bash
+python -m uvicorn app.main:app --reload
+```
+
+- `http://127.0.0.1:8000/health`: estado del servicio y versión del modelo cargado.
+- `http://127.0.0.1:8000/docs`: documentación Swagger, para probar los endpoints.
+
+### GET /health
+
+Respuesta cuando el modelo está cargado (código 200):
+
+```json
+{
+  "status": "ok",
+  "model_loaded": true,
+  "model_version": "1"
+}
+```
+
+Si el modelo no se pudo cargar, la API arranca igual y responde 503 con
+`"model_loaded": false`. Esto permite que Docker detecte que el servicio no está listo.
+
+### Pruebas
+
+```bash
+python -m pytest test/test_health.py -v
+```
+
+- `test_health_ok`: la API carga el modelo y `/health` responde 200 con la versión.
+- `test_health_sin_modelo`: si el modelo no carga, `/health` responde 503.
+
+Resultado verificado:
+
+```text
+2 passed
+```
+
 ## Reproduccion del flujo
 
 Una vez clonado el repositorio y configurado el entorno:
