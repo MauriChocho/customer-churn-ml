@@ -1,8 +1,11 @@
-#Crea la aplicacion FastAPI, cargar el modelo una sola vez al arrancar y exponer GET /health para saber si el servicio esta listo.
+# Crea la aplicacion FastAPI, carga el modelo una sola vez al arrancar
+# y expone GET /health para saber si el servicio esta listo.
 
+import json                      
 import logging
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path        
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
@@ -16,19 +19,26 @@ logging.basicConfig(
 )
 logger = logging.getLogger("churn-api")
 
-# Version del modelo registrado en el Model Registry (churn_logistic_regression v1)
-MODEL_VERSION = os.getenv("MODEL_VERSION", "1")
+# archivo generado por scripts/exportar_modelo.py
+META_PATH = Path(__file__).resolve().parents[1] / "models" / "model_meta.json"
+
+
+#  la version del modelo exportado; si no existe, usa la variable de entorno
+def leer_version():
+    if META_PATH.exists():
+        return json.loads(META_PATH.read_text())["model_version"]
+    return os.getenv("MODEL_VERSION", "desconocida")
 
 
 # Se ejecuta una vez al iniciar la API (antes de recibir pedidos)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.pipeline = None
-    app.state.model_version = MODEL_VERSION
+    app.state.model_version = leer_version()          
 
     try:
         app.state.pipeline = cargar_modelo()
-        logger.info("Modelo cargado correctamente. Version: %s", MODEL_VERSION)
+        logger.info("Modelo cargado correctamente. Version: %s", app.state.model_version)  
     except Exception:
         # La API arranca igual, pero /health avisa que no esta lista
         logger.exception("No se pudo cargar el modelo")
