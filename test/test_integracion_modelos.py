@@ -15,8 +15,8 @@ MODELOS = [
     ("src.training.train_svm", "svm"),
     ("src.training.train_random_forest", "random_forest"),
     ("src.training.train_baseline", "baseline"),
-    # ("src.training.train_regresion_logistica", "regresion_logistica"),
-    # ("src.training.train_arbol_decision", "arbol_decision"),
+    ("src.training.train_logistic_regression", "logistic_regression"),
+    ("src.training.train_decision_tree", "decision_tree"),
 ]
 
 
