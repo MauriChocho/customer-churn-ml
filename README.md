@@ -416,6 +416,54 @@ El resultado es el pipeline completo, con los pasos `preprocessing` y `model`.
 
 Para conectarse a DagsHub hay que contar con acceso al repositorio. La primera vez puede solicitar autorizacion desde el navegador. No se deben incluir contraseñas ni tokens en el codigo.
 
+### Exportación del modelo registrado
+
+La API y los contenedores no se conectan a DagsHub. Utilizan una copia local de la
+versión registrada, exportada una sola vez desde el Model Registry y versionada con DVC.
+De esta manera, la aplicación usa una versión identificable del modelo sin necesitar
+tokens ni conexión a internet.
+
+Para exportar el modelo (requiere acceso a DagsHub), desde la carpeta raíz del proyecto:
+
+```bash
+python -m scripts.exportar_modelo
+```
+
+El script:
+
+- descarga `churn_logistic_regression` versión 1 desde el Model Registry
+- la guarda en `models/churn_pipeline.joblib` (el archivo que utiliza `cargar_modelo()`)
+- genera `models/model_meta.json` con el origen del modelo:
+
+```json
+{
+  "model_name": "churn_logistic_regression",
+  "model_version": "1",
+  "run_id": "a1033ab77d204947a0cd51e8eaafc3ae"
+}
+```
+
+Luego se versiona el modelo con DVC:
+
+```bash
+python -m dvc add models/churn_pipeline.joblib
+python -m dvc push
+```
+
+Para obtener el modelo exportado en otra computadora:
+
+```bash
+git pull
+python -m dvc pull
+```
+
+**Trazabilidad:** `model_meta.json` indica la versión y el Run de MLflow que originaron
+el modelo. Desde ese Run, en DagsHub, se pueden consultar los parámetros, las métricas
+y el commit de entrenamiento.
+
+Si en el futuro se registra una nueva versión, se debe actualizar `VERSION` en
+`scripts/exportar_modelo.py` y repetir la exportación.
+
 ## Análisis de umbrales de riesgo
 
 Para definir los niveles de riesgo LOW, MEDIUM y HIGH, se compararon tres propuestas utilizando las probabilidades de Logistic Regression obtenidas mediante validación cruzada sobre los datos de entrenamiento.
