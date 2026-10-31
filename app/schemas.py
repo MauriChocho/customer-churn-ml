@@ -1,4 +1,3 @@
-
 # Datos que recibe la API para hacer una predicción de churn
 # Los nombres tienen que coincidir con los del preprocessing
 
@@ -18,8 +17,8 @@ class PredictionRequest(BaseModel):
     Partner: SiNo
     Dependents: SiNo
 
-    # En el dataset tenure llega hasta 72 meses
-    tenure: int = Field(ge=0, le=72)
+    # No se fija un máximo: un cliente con más de 72 meses también es válido
+    tenure: int = Field(ge=0)
 
     PhoneService: SiNo
     MultipleLines: Literal["No", "No phone service", "Yes"]

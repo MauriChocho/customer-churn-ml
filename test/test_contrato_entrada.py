@@ -1,4 +1,3 @@
-
 # Pruebas para verificar los datos que recibe la API
 # Se usan datos de ejemplo, sin necesidad de cargar el dataset ni el modelo
 
@@ -95,7 +94,6 @@ def test_categoria_que_no_existe(campo, valor):
     "campo, valor",
     [
         ("tenure", -1),
-        ("tenure", 73),
         ("MonthlyCharges", 0),
         ("MonthlyCharges", -5.0),
         ("TotalCharges", -1.0),
@@ -109,6 +107,13 @@ def test_valor_fuera_de_rango(campo, valor):
         PredictionRequest(**cliente)
 
     assert campos_con_error(error.value) == {campo}
+
+
+def test_tenure_no_tiene_maximo():
+    # Un cliente con más de 72 meses de antigüedad también es válido
+    cliente = dict(CLIENTE_VALIDO, tenure=80)
+
+    assert PredictionRequest(**cliente).tenure == 80
 
 
 @pytest.mark.parametrize(

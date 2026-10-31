@@ -534,7 +534,7 @@ El modelo de entrada está definido en `app/schemas.py`, dentro de la clase `Pre
 | `SeniorCitizen` | entero | `0`, `1` |
 | `Partner` | texto | `No`, `Yes` |
 | `Dependents` | texto | `No`, `Yes` |
-| `tenure` | entero | de 0 a 72 |
+| `tenure` | entero | mayor o igual a 0 |
 | `PhoneService` | texto | `No`, `Yes` |
 | `MultipleLines` | texto | `No`, `No phone service`, `Yes` |
 | `InternetService` | texto | `DSL`, `Fiber optic`, `No` |
@@ -554,7 +554,7 @@ El modelo de entrada está definido en `app/schemas.py`, dentro de la clase `Pre
 
 - `TotalCharges` puede no enviarse o recibirse como `null`. En esos casos, el pipeline completa el valor faltante utilizando la mediana.
 - Si se envían campos que no están definidos en el contrato, como `customerID`, se ignoran.
-- `tenure` debe estar entre 0 y 72, de acuerdo con los valores del dataset histórico.
+- `tenure` no puede ser negativo y no tiene un máximo: un cliente con más de 72 meses de antigüedad también es válido.
 - Pydantic permite convertir textos que representan números en los campos `tenure`, `MonthlyCharges` y `TotalCharges`. Por ejemplo, `"32"` se convierte en `32`. Si no puede realizar la conversión, devuelve un error.
 - `SeniorCitizen` debe recibirse como un número entero (`0` o `1`), no como texto.
 - Cuando hay más de un dato incorrecto, se informan todos los errores encontrados en la misma respuesta.
