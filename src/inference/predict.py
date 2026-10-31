@@ -24,7 +24,7 @@ COLUMNAS_ENTRADA = NUMERIC_FEATURES + BINARY_FEATURES + CATEGORICAL_FEATURES
 
 # Etiquetas de la prediccion
 ETIQUETA_CHURN = "CHURN"
-ETIQUETA_NO_CHURN = "NO_CHURN"  # PENDIENTE DE DECISION DEL EQUIPO
+ETIQUETA_NO_CHURN = "NO_CHURN"
 
 # Umbrales de risk_level
 # Acordados por el equipo (propuesta B), segun el analisis de umbrales
