@@ -520,6 +520,70 @@ python -m src.inference.predict
 
 El segundo comando es una prueba manual con el primer cliente del dataset (requiere tener descargado `data/raw/customer_churn_historical.csv` con DVC).
 
+## Contrato de entrada de la API
+
+La API recibe los datos de un cliente para predecir si puede abandonar el servicio (churn). Antes de hacer la predicción, esos datos se validan usando Pydantic.
+
+El modelo de entrada está definido en `app/schemas.py`, dentro de la clase `PredictionRequest`. Los campos y sus nombres coinciden con los que utiliza el pipeline de preprocessing (`src/features/preprocessing.py`).
+
+### Campos
+
+| Campo | Tipo | Valores permitidos |
+|---|---|---|
+| `gender` | texto | `Female`, `Male` |
+| `SeniorCitizen` | entero | `0`, `1` |
+| `Partner` | texto | `No`, `Yes` |
+| `Dependents` | texto | `No`, `Yes` |
+| `tenure` | entero | de 0 a 72 |
+| `PhoneService` | texto | `No`, `Yes` |
+| `MultipleLines` | texto | `No`, `No phone service`, `Yes` |
+| `InternetService` | texto | `DSL`, `Fiber optic`, `No` |
+| `OnlineSecurity` | texto | `No`, `No internet service`, `Yes` |
+| `OnlineBackup` | texto | `No`, `No internet service`, `Yes` |
+| `DeviceProtection` | texto | `No`, `No internet service`, `Yes` |
+| `TechSupport` | texto | `No`, `No internet service`, `Yes` |
+| `StreamingTV` | texto | `No`, `No internet service`, `Yes` |
+| `StreamingMovies` | texto | `No`, `No internet service`, `Yes` |
+| `Contract` | texto | `Month-to-month`, `One year`, `Two year` |
+| `PaperlessBilling` | texto | `No`, `Yes` |
+| `PaymentMethod` | texto | `Bank transfer (automatic)`, `Credit card (automatic)`, `Electronic check`, `Mailed check` |
+| `MonthlyCharges` | decimal | mayor que 0 |
+| `TotalCharges` | decimal, opcional | mayor o igual a 0 |
+
+### Validaciones
+
+- `TotalCharges` puede no enviarse o recibirse como `null`. En esos casos, el pipeline completa el valor faltante utilizando la mediana.
+- Si se envían campos que no están definidos en el contrato, como `customerID`, se ignoran.
+- `tenure` debe estar entre 0 y 72, de acuerdo con los valores del dataset histórico.
+- Pydantic permite convertir textos que representan números en los campos `tenure`, `MonthlyCharges` y `TotalCharges`. Por ejemplo, `"32"` se convierte en `32`. Si no puede realizar la conversión, devuelve un error.
+- `SeniorCitizen` debe recibirse como un número entero (`0` o `1`), no como texto.
+- Cuando hay más de un dato incorrecto, se informan todos los errores encontrados en la misma respuesta.
+
+### Ejemplo de uso
+
+```python
+from app.schemas import PredictionRequest
+
+cliente = PredictionRequest(**datos)
+
+# Se obtienen los datos validados para enviarlos a la predicción
+datos_validados = cliente.model_dump()
+```
+
+### Integración con la API
+
+Este contrato se utilizará en el endpoint `POST /predict`, que todavía está en desarrollo. Cuando los datos recibidos no cumplan con las validaciones, FastAPI devolverá un error HTTP 422.
+
+### Pruebas
+
+Para ejecutar las pruebas del contrato de entrada:
+
+```bash
+python -m pytest test/test_contrato_entrada.py -v
+```
+
+Las pruebas se pueden ejecutar sin tener descargados el dataset ni el modelo. Se verifica que se pueda ingresar un cliente válido y que se rechacen los datos incompletos, las categorías que no pertenecen al dataset, los valores fuera de rango y los tipos incorrectos. También se comprueba que los campos definidos en el contrato coincidan con las columnas que utiliza el pipeline.
+
 ## Reproduccion del flujo
 
 Una vez clonado el repositorio y configurado el entorno:
