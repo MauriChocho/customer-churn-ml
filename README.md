@@ -443,18 +443,28 @@ El script:
 }
 ```
 
-Luego se versiona el modelo con DVC:
+Luego se versiona el modelo con DVC y se sube al remote de DagsHub:
 
 ```bash
 python -m dvc add models/churn_pipeline.joblib
-python -m dvc push
+python -m dvc push models/churn_pipeline.joblib.dvc
 ```
+
+Para comprobar que el modelo quedó subido:
+
+```bash
+python -m dvc status -c models/churn_pipeline.joblib.dvc
+```
+
+**Importante:** después de exportar, ejecutar siempre `dvc push` y subir a Git en el
+**mismo commit** `models/churn_pipeline.joblib.dvc` y `models/model_meta.json`.
+Así la versión indicada en el JSON corresponde siempre al modelo que descarga DVC.
 
 Para obtener el modelo exportado en otra computadora:
 
 ```bash
 git pull
-python -m dvc pull
+python -m dvc pull models/churn_pipeline.joblib.dvc
 ```
 
 **Trazabilidad:** `model_meta.json` indica la versión y el Run de MLflow que originaron
@@ -462,7 +472,8 @@ el modelo. Desde ese Run, en DagsHub, se pueden consultar los parámetros, las m
 y el commit de entrenamiento.
 
 Si en el futuro se registra una nueva versión, se debe actualizar `VERSION` en
-`scripts/exportar_modelo.py` y repetir la exportación.
+`scripts/exportar_modelo.py` y repetir la exportación completa: exportar, `dvc add`,
+`dvc push` y commit conjunto del `.dvc` y del `model_meta.json`.
 
 ## Análisis de umbrales de riesgo
 
