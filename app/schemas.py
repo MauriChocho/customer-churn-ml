@@ -3,7 +3,7 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # Opciones que tiene cada campo en el dataset
 SiNo = Literal["No", "Yes"]
@@ -41,3 +41,27 @@ class PredictionRequest(BaseModel):
 
     # Si viene vacío, después se completa con la mediana
     TotalCharges: float | None = Field(default=None, ge=0)
+
+# Datos que devuelve la API después de una predicción
+# Los valores salen de predecir() en src/inference/predict.py
+class PredictionResponse(BaseModel):
+    prediction: Literal["CHURN", "NO_CHURN"]
+    probability: float = Field(ge=0, le=1)
+    risk_level: Literal["LOW", "MEDIUM", "HIGH"]
+    model_version: str
+    request_id: str
+
+    # Ejemplo que se muestra en Swagger (/docs)
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "prediction": "CHURN",
+                    "probability": 0.81,
+                    "risk_level": "HIGH",
+                    "model_version": "1",
+                    "request_id": "3f1c9a2e-8b7d-4e5f-9a1b-2c3d4e5f6a7b",
+                }
+            ]
+        }
+    )
