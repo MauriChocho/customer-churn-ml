@@ -7,10 +7,11 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path        
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 
-from src.inference.predict import cargar_modelo
+from app.schemas import PredictionRequest
+from src.inference.predict import cargar_modelo, predecir
 
 # Logs basicos: se ven en la terminal y en "docker compose logs"
 logging.basicConfig(
@@ -74,3 +75,25 @@ def health():
         "model_loaded": True,
         "model_version": app.state.model_version,
     }
+    
+# Recibe los datos validados del cliente y devuelve la prediccion
+@app.post("/predict", tags=["Prediccion"])
+def predict(request: PredictionRequest):
+    # Si el modelo no esta disponible, no podemos realizar la prediccion
+    if app.state.pipeline is None:
+        raise HTTPException(
+            status_code=503,
+            detail="El modelo no esta disponible",
+        )
+
+    # Pydantic entrega un diccionario con las variables validadas
+    datos_cliente = request.model_dump()
+
+    # Reutilizamos la inferencia y el modelo cargado al iniciar FastAPI
+    resultado = predecir(
+        app.state.pipeline,
+        datos_cliente,
+        app.state.model_version,
+    )
+
+    return resultado
