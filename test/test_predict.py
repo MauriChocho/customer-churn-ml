@@ -73,3 +73,18 @@ def test_predict_error_interno(monkeypatch):
     # La API debe responder con un error controlado, sin exponer detalles internos
     assert respuesta.status_code == 500
     assert respuesta.json()["detail"] == "Error interno al realizar la prediccion"
+    
+# Verifica que la API rechace datos invalidos con HTTP 422
+def test_predict_datos_invalidos():
+    # Copiamos un cliente valido para modificar solamente un campo
+    datos_invalidos = CLIENTE_VALIDO.copy()
+
+    # tenure representa los meses como cliente y no puede ser negativo
+    datos_invalidos["tenure"] = -1
+
+    # Enviamos los datos incorrectos al endpoint
+    with TestClient(app) as cliente:
+        respuesta = cliente.post("/predict", json=datos_invalidos)
+
+    # FastAPI debe rechazar la solicitud antes de llamar al modelo
+    assert respuesta.status_code == 422
