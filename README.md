@@ -631,7 +631,7 @@ datos_validados = cliente.model_dump()
 
 ### Integración con la API
 
-Este contrato se utilizará en el endpoint `POST /predict`, que todavía está en desarrollo. Cuando los datos recibidos no cumplan con las validaciones, FastAPI devolverá un error HTTP 422.
+Este contrato se utiliza en el endpoint `POST /predict`. Cuando los datos recibidos no cumplen con las validaciones, FastAPI devuelve un error HTTP 422 sin llegar al modelo. En la respuesta, `detail` incluye un error por cada dato incorrecto, y `loc` indica el campo que falló (por ejemplo, `["body", "Contract"]`). Las pruebas por HTTP están en `test/test_predict_validaciones.py` y se ejecutan con `python -m pytest test/test_predict_validaciones.py -v`.
 
 ### Pruebas
 
