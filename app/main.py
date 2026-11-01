@@ -4,13 +4,14 @@
 import json                      
 import logging
 import os
+from uuid import uuid4
 from contextlib import asynccontextmanager
 from pathlib import Path        
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 
-from app.schemas import PredictionRequest
+from app.schemas import PredictionRequest, PredictionResponse
 from src.inference.predict import cargar_modelo, predecir
 
 # Logs basicos: se ven en la terminal y en "docker compose logs"
@@ -77,7 +78,7 @@ def health():
     }
     
 # Recibe los datos validados del cliente y devuelve la prediccion
-@app.post("/predict", tags=["Prediccion"])
+@app.post("/predict", response_model=PredictionResponse, tags=["Prediccion"])
 def predict(request: PredictionRequest):
     # Si el modelo no esta disponible, no podemos realizar la prediccion
     if app.state.pipeline is None:
@@ -103,5 +104,8 @@ def predict(request: PredictionRequest):
             status_code=500,
             detail="Error interno al realizar la prediccion",
         ) from None
+
+    # Generamos un identificador unico para esta solicitud
+    resultado["request_id"] = str(uuid4())
 
     return resultado

@@ -44,6 +44,19 @@ def test_predict_cliente_valido():
     assert 0 <= resultado["probability"] <= 1
     assert resultado["risk_level"] in ("LOW", "MEDIUM", "HIGH")
     assert isinstance(resultado["model_version"], str)
+    
+    # Verificamos que la respuesta tenga los cinco campos del contrato
+    assert set(resultado.keys()) == {
+        "prediction",
+        "probability",
+        "risk_level",
+        "model_version",
+        "request_id",
+    }
+
+    # Verificamos que se genere un identificador para la solicitud
+    assert isinstance(resultado["request_id"], str)
+    assert resultado["request_id"]
 
 
 # Verifica que la API devuelva HTTP 503 cuando el modelo no esta disponible
