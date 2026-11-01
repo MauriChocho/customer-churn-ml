@@ -90,10 +90,18 @@ def predict(request: PredictionRequest):
     datos_cliente = request.model_dump()
 
     # Reutilizamos la inferencia y el modelo cargado al iniciar FastAPI
-    resultado = predecir(
-        app.state.pipeline,
-        datos_cliente,
-        app.state.model_version,
-    )
+    # Si ocurre un error inesperado al predecir, devolvemos HTTP 500
+    try:
+        resultado = predecir(
+            app.state.pipeline,
+            datos_cliente,
+            app.state.model_version,
+        )
+    except Exception:
+        logger.exception("Error al realizar la prediccion")
+        raise HTTPException(
+            status_code=500,
+            detail="Error interno al realizar la prediccion",
+        ) from None
 
     return resultado

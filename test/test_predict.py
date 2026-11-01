@@ -57,3 +57,19 @@ def test_predict_modelo_no_disponible():
     # Sin modelo cargado, el endpoint debe devolver HTTP 503
     assert respuesta.status_code == 503
     assert respuesta.json()["detail"] == "El modelo no esta disponible"
+
+# Verifica que la API devuelva HTTP 500 si ocurre un error inesperado al predecir
+def test_predict_error_interno(monkeypatch):
+    # Simulamos un fallo en la funcion de inferencia
+    def predecir_con_error(*args, **kwargs):
+        raise RuntimeError("Fallo simulado del modelo")
+
+    monkeypatch.setattr("app.main.predecir", predecir_con_error)
+
+    # Enviamos un cliente valido para llegar hasta la inferencia
+    with TestClient(app) as cliente:
+        respuesta = cliente.post("/predict", json=CLIENTE_VALIDO)
+
+    # La API debe responder con un error controlado, sin exponer detalles internos
+    assert respuesta.status_code == 500
+    assert respuesta.json()["detail"] == "Error interno al realizar la prediccion"
