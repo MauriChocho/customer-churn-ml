@@ -549,7 +549,7 @@ El cliente es un diccionario con las 19 columnas que espera el pipeline (sin `cu
 
 | Campo | Tipo | Descripción |
 |---|---|---|
-| `prediction` | texto | `CHURN` o `NO_CHURN` (el nombre de la clase 0 está pendiente de confirmar por el equipo) |
+| `prediction` | texto | `CHURN` o `NO_CHURN`|
 | `probability` | número entre 0 y 1 | probabilidad estimada de abandono |
 | `risk_level` | texto | `LOW`, `MEDIUM` o `HIGH` |
 | `model_version` | texto | versión del modelo que se le pasa a la función |
