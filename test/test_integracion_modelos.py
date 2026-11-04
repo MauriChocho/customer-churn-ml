@@ -1,6 +1,9 @@
 # Importar librerías
+import hashlib
 import runpy
+from pathlib import Path
 
+import joblib
 import pytest
 from sklearn.pipeline import Pipeline
 
@@ -8,6 +11,10 @@ import src.utils.mlflow_utils as mlflow_utils
 
 # Claves de métricas acordadas por el equipo
 METRICAS_ACORDADAS = {"precision", "recall", "f1", "roc_auc", "accuracy"}
+
+# Modelo que usa la API: exportado del Model Registry y versionado con DVC
+# La prueba no debe modificarlo
+MODELO_SERVIDO = Path("models/churn_pipeline.joblib")
 
 # Scripts integrados con MLflow y el nombre de run que deben usar
 # Agregar una línea cuando cada integrante termine su integración
@@ -18,6 +25,14 @@ MODELOS = [
     ("src.training.train_logistic_regression", "logistic_regression"),
     ("src.training.train_decision_tree", "decision_tree"),
 ]
+
+
+
+# Huella MD5 del modelo servido, para comprobar que la prueba no lo cambie
+def huella_del_modelo():
+    if not MODELO_SERVIDO.exists():
+        return None
+    return hashlib.md5(MODELO_SERVIDO.read_bytes()).hexdigest()
 
 
 # Probar que cada script entrega correctamente su información a MLflow
@@ -40,11 +55,22 @@ def test_script_registra_en_mlflow(monkeypatch, modulo, nombre_run_esperado):
         llamadas["etiquetas"] = etiquetas
         llamadas["pipeline"] = pipeline
 
+    # Simular el guardado con joblib: algunos scripts (por ejemplo, regresión logística)
+    # guardan el pipeline en models/churn_pipeline.joblib y pisarían el modelo exportado
+    def simular_guardado(objeto, ruta, *args, **kwargs):
+        llamadas.setdefault("archivos_guardados", []).append(str(ruta))
+
     monkeypatch.setattr(mlflow_utils, "configurar_mlflow", simular_configurar_mlflow)
     monkeypatch.setattr(mlflow_utils, "registrar_experimento", simular_registrar_experimento)
+    monkeypatch.setattr(joblib, "dump", simular_guardado)
+
+    huella_antes = huella_del_modelo()
 
     # Ejecutar el script de entrenamiento completo
     runpy.run_module(modulo, run_name="__main__")
+
+    # Verificar que el modelo que usa la API no cambió
+    assert huella_del_modelo() == huella_antes
 
     # Verificar que configuró MLflow
     assert llamadas.get("configurado") is True
