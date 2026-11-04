@@ -795,8 +795,7 @@ Para volver al modelo registrado:
 python -m dvc checkout models/churn_pipeline.joblib.dvc
 ```
 
-Para que la API utilice un modelo nuevo, este debe registrarse en MLflow y luego
-repetirse la exportación del modelo registrado.
+Para que la API utilice un modelo nuevo, este debe registrarse en MLflow y luego repetirse la exportación del modelo registrado.
 
 ## Stack utilizado (Entrega 1)
 
