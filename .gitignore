@@ -10,7 +10,7 @@ __pycache__/
 
 # Jupyter
 .ipynb_checkpoints/
-git status
+
 # Datos (los versiona DVC)
 data/raw/*
 !data/raw/*.dvc
@@ -36,7 +36,6 @@ models/*
 .DS_Store
 .vscode/
 *.swp
->>>>>>> 1552fbe890b0da7a83af34b88ebd34efce688256
 
 # Base de datos local de MLflow
 mlflow.db
