@@ -742,7 +742,7 @@ Las pruebas utilizan `monkeypatch` para simular las condiciones necesarias sin m
 
 ## Reproduccion del flujo
 
-Una vez clonado el repositorio y configurado el entorno:
+Una vez clonado el repositorio y configurado el entorno, desde la carpeta raíz del proyecto:
 
 1. Instalar las dependencias:
 
@@ -750,27 +750,53 @@ Una vez clonado el repositorio y configurado el entorno:
 pip install -r requirements.txt
 ```
 
-2. Configurar las credenciales de DagsHub.
+2. Configurar las credenciales de DagsHub (ver "Configuración de acceso a los datos").
 
-3. Recuperar los archivos administrados por DVC:
+3. Recuperar los archivos administrados por DVC (dataset histórico y modelo exportado del Model Registry):
 
 ```bash
 python -m dvc pull
 ```
 
-4. Entrenar el modelo candidato:
+4. Ejecutar las pruebas:
+
+```bash
+python -m pytest test/ -v
+```
+
+5. Levantar la API con el modelo registrado (versión 1):
+
+```bash
+python -m uvicorn app.main:app
+```
+
+Luego verificar en el navegador:
+
+- `http://127.0.0.1:8000/health`: debe responder `"status": "ok"` y `"model_version": "1"`.
+- `http://127.0.0.1:8000/docs`: permite enviar una solicitud de prueba a `POST /predict`.
+
+### Reentrenamiento (opcional)
+
+El modelo que utiliza la API es la versión 1 exportada del Model Registry
+(ver "Exportación del modelo registrado"). No es necesario reentrenar para usar el proyecto.
+
+Para reproducir el entrenamiento del modelo candidato:
 
 ```bash
 python -m src.training.train_logistic_regression
 ```
 
-5. Probar el pipeline serializado:
+Este script **sobrescribe** `models/churn_pipeline.joblib`. Desde ese momento, el archivo
+ya no corresponde a la versión indicada en `models/model_meta.json`.
+
+Para volver al modelo registrado:
 
 ```bash
-python -m src.inference.predict
+python -m dvc checkout models/churn_pipeline.joblib.dvc
 ```
 
-De esta manera se puede reproducir el entrenamiento y verificar el funcionamiento del modelo desde la linea de comandos.
+Para que la API utilice un modelo nuevo, este debe registrarse en MLflow y luego
+repetirse la exportación del modelo registrado.
 
 ## Stack utilizado (Entrega 1)
 
