@@ -688,6 +688,57 @@ Resultado verificado:
 ```text
 2 passed
 ```
+### POST /predict
+
+Este endpoint recibe los datos de un cliente y devuelve una predicción de abandono utilizando el modelo entrenado.
+
+Está implementado en `app/main.py` y utiliza los contratos `PredictionRequest` y `PredictionResponse` definidos en `app/schemas.py`.
+
+Los datos de entrada se validan con Pydantic antes de realizar la predicción. Las 19 variables requeridas y sus validaciones están documentadas en la sección "Contrato de entrada de la API".
+
+El endpoint reutiliza el pipeline cargado al iniciar FastAPI y llama a la función `predecir()` de `src/inference/predict.py`. No vuelve a cargar ni entrenar el modelo para cada solicitud.
+
+#### Respuesta de la API
+
+Cuando la solicitud es válida y la predicción se realiza correctamente, devuelve HTTP 200 con cinco campos:
+
+| Campo | Descripción |
+|---|---|
+| `prediction` | Predicción del modelo: `CHURN` o `NO_CHURN`. |
+| `probability` | Probabilidad estimada de abandono, entre 0 y 1. |
+| `risk_level` | Nivel de riesgo: `LOW`, `MEDIUM` o `HIGH`. |
+| `model_version` | Versión del modelo utilizado para predecir. |
+| `request_id` | Identificador único generado para cada solicitud mediante `uuid4()`. |
+
+El campo `request_id` se agrega en el endpoint y no forma parte de la respuesta original de la función `predecir()`.
+
+#### Códigos HTTP
+
+| Código | Situación |
+|---|---|
+| `200` | La predicción se realizó correctamente. |
+| `422` | Los datos enviados no cumplen las validaciones de `PredictionRequest`. |
+| `500` | Ocurrió un error inesperado durante la inferencia. |
+| `503` | El modelo no está disponible para realizar predicciones. |
+
+#### Pruebas HTTP
+
+Las pruebas del endpoint están implementadas en `test/test_predict.py`.
+
+Para ejecutarlas desde la carpeta raíz del proyecto:
+
+```bash
+python -m pytest test/test_predict.py -v
+```
+
+Se verifican cuatro situaciones:
+
+- Cliente válido: el endpoint responde HTTP 200 y devuelve los cinco campos esperados.
+- Datos inválidos: un valor negativo de `tenure` produce HTTP 422.
+- Error inesperado de inferencia: el endpoint responde HTTP 500.
+- Modelo no disponible: el endpoint responde HTTP 503.
+
+Las pruebas utilizan `monkeypatch` para simular las condiciones necesarias sin modificar la implementación real de inferencia.
 
 ## Reproduccion del flujo
 
