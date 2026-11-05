@@ -8,8 +8,33 @@ Una empresa de telecomunicaciones necesita identificar clientes con riesgo de ab
 servicio (`Churn`). El sistema debe estimar la probabilidad de abandono de un cliente y
 devolver un nivel de riesgo (`LOW` / `MEDIUM` / `HIGH`) consumible por otros sistemas
 (por ejemplo, un CRM o una campaña de retención).
-   El objetivo de esta primera etapa es desarrollar y comparar modelos capaces de predecir si un cliente presenta riesgo de churn.
+   El objetivo es desarrollar y comparar modelos capaces de predecir si un cliente presenta riesgo de churn.
 A partir de esta prediccion, la empresa podria identificar clientes con mayor riesgo de abandono y orientar futuras acciones de retencion.
+
+## Cómo funciona el sistema
+
+```
+Cliente (19 variables en JSON)
+   │
+   ▼
+POST /predict  ──►  Pydantic valida la entrada  ──►  si es inválida: error 422
+   │
+   ▼
+Pipeline del modelo (versión 1 del Model Registry)
+   ├─ Preprocessing: imputa nulos, codifica categorías y escala
+   └─ Logistic Regression: calcula la probabilidad de abandono
+   │
+   ▼
+Umbrales de riesgo: LOW < 0.20 · MEDIUM 0.20–0.50 · HIGH ≥ 0.50
+   │
+   ▼
+Respuesta: prediction, probability, risk_level, model_version, request_id
+```
+
+- El modelo se carga **una sola vez** al iniciar la API, desde `models/churn_pipeline.joblib`.
+- `prediction` usa un corte de 0.50 (`CHURN` / `NO_CHURN`). `risk_level` gradúa el riesgo
+  para orientar acciones de retención: un cliente puede ser `NO_CHURN` y aun así `MEDIUM`.
+- `GET /health` informa si el modelo está cargado y qué versión se está usando.
 
 
 ## Dataset
@@ -27,22 +52,29 @@ El dataset no se versiona directamente con Git. Se encuentra gestionado con DVC 
 
 ```
 customer-churn-ml/
-├── app/              # servicio de API (FastAPI) - entregas posteriores
+├── app/
+│   ├── main.py        # API FastAPI: carga del modelo, /health y /predict
+│   └── schemas.py     # contratos Pydantic de entrada y salida
 ├── data/
-│   └── raw/          # dataset historico, versionado con DVC
-├── models/           # pipelines/modelos serializados
-├── monitoring/       # monitoreo del modelo en produccion - entregas posteriores
-├── notebooks/        # notebooks de EDA y experimentacion
-├── scripts/          # scripts auxiliares
+│   └── raw/           # dataset historico, versionado con DVC
+├── models/
+│   ├── churn_pipeline.joblib.dvc  # modelo servido (version 1 del Model Registry)
+│   └── model_meta.json            # nombre, version y run de MLflow del modelo
+├── monitoring/        # monitoreo del modelo en produccion - entrega final
+├── notebooks/         # notebooks de EDA y experimentacion
+├── scripts/
+│   └── exportar_modelo.py  # exporta el modelo registrado a models/
 ├── src/
-│   ├── data/          # carga y separacion de datos
-│   ├── evaluation/    # calculo de metricas
-│   ├── features/      # preprocessing / feature engineering
-│   ├── inference/     # carga del pipeline entrenado y ejecucion de predicciones
-│   └── training/      # entrenamiento de modelos
-├── test/              # tests
+│   ├── data/          # EDA y reporte
+│   ├── evaluation/    # comparacion de modelos y analisis de umbrales
+│   ├── features/      # preprocessing
+│   ├── inference/     # carga del pipeline y predicciones
+│   ├── training/      # entrenamiento de modelos con MLflow
+│   └── utils/         # funciones compartidas de MLflow
+├── test/              # pruebas automaticas (pytest)
 ├── requirements.txt
 └── README.md
+
 ```
 
 ## Cómo levantar el proyecto
@@ -56,7 +88,7 @@ customer-churn-ml/
 2. Crear y activar un entorno virtual
 ```bash
    python -m venv venv
-   source .\venv\Scripts\Activate.ps1    # Windows
+   .\venv\Scripts\Activate.ps1    # Windows
    source venv/bin/activate   # Linux/Mac
 ```
 
@@ -518,13 +550,22 @@ git pull
 python -m dvc pull models/churn_pipeline.joblib.dvc
 ```
 
-**Trazabilidad:** `model_meta.json` indica la versión y el Run de MLflow que originaron
-el modelo. Desde ese Run, en DagsHub, se pueden consultar los parámetros, las métricas
-y el commit de entrenamiento.
+### Trazabilidad del modelo servido
 
-Si en el futuro se registra una nueva versión, se debe actualizar `VERSION` en
-`scripts/exportar_modelo.py` y repetir la exportación completa: exportar, `dvc add`,
-`dvc push` y commit conjunto del `.dvc` y del `model_meta.json`.
+| Elemento | Valor |
+|---|---|
+| Modelo registrado | `churn_logistic_regression`, versión 1 |
+| Run de MLflow | `a1033ab77d204947a0cd51e8eaafc3ae` (experimento `churn-classification`) |
+| Commit de entrenamiento | `ee6fd3bb68` |
+| MD5 del dataset | `026e0519053e9c810c8da233c7ad5449` |
+| MD5 del modelo servido | `2657e6f63a25ceda66e407c2755abf79` |
+
+Recorrido: la API informa `model_version` → `models/model_meta.json` indica el Run →
+en DagsHub, el Run muestra parámetros, métricas y el commit → ese commit apunta, mediante
+DVC, a la versión del dataset utilizada.
+
+Límite: la relación con los datos se reconstruye a partir del commit y su referencia DVC;
+no demuestra retrospectivamente que el entrenamiento se ejecutara sin cambios locales.
 
 ## Análisis de umbrales de riesgo
 
@@ -981,10 +1022,15 @@ python -m dvc checkout models/churn_pipeline.joblib.dvc
 
 Para que la API utilice un modelo nuevo, este debe registrarse en MLflow y luego repetirse la exportación del modelo registrado.
 
-## Stack utilizado (Entrega 1)
+## Stack utilizado
 
-Python, pandas, NumPy, scikit-learn, joblib, Git/GitHub y DVC + DagsHub.
-
+- **Datos y modelado:** Python, pandas, NumPy, scikit-learn, joblib.
+- **Análisis y visualización:** Jupyter, matplotlib, seaborn.
+- **Versionado:** Git/GitHub, DVC + DagsHub (dataset y modelo).
+- **Experimentos y registro de modelos:** MLflow (tracking y Model Registry en DagsHub).
+- **API:** FastAPI, Uvicorn, Pydantic.
+- **Testing:** pytest, httpx (cliente de prueba de FastAPI).
+- **Contenedores:** Docker y Docker Compose.
 
 ## Integrantes
 
@@ -997,4 +1043,4 @@ Python, pandas, NumPy, scikit-learn, joblib, Git/GitHub y DVC + DagsHub.
 
 ## Estado actual
 
-🚧 Proyecto en desarrollo — Entrega 1 en curso.
+🚧 Proyecto en desarrollo — Implementacion de Docker y Docker Compose - Entrega 2 en curso.
