@@ -184,17 +184,60 @@ Resultado verificado:
 2 passed
 ```
 
+#### Prueba de integración de los modelos con MLflow
+
+`test/test_mlflow_utils.py` prueba las funciones compartidas con datos de ejemplo. `test/test_integracion_modelos.py` prueba que cada script de entrenamiento les pase bien la información.
+
+La prueba ejecuta cada script de entrenamiento completo, pero reemplaza `configurar_mlflow()` y `registrar_experimento()` por versiones simuladas que guardan lo que reciben. Por eso no se conecta a DagsHub ni crea runs nuevos.
+
+También simula `joblib.dump`. El script de regresión logística guarda el pipeline en `models/churn_pipeline.joblib`, que es el mismo archivo del modelo exportado del Model Registry que usa la API. Sin esa simulación, correr la prueba reemplazaba el modelo servido por uno reentrenado localmente, con otra huella MD5. La prueba compara la huella del modelo antes y después de cada script para asegurarse de que no cambie.
+
+Para cada modelo verifica que:
+
+- el modelo que usa la API no se modifique
+- se llame a `configurar_mlflow()`
+- el `nombre_run` sea el esperado
+- se envíen exactamente las cinco métricas acordadas (`precision`, `recall`, `f1`, `roc_auc`, `accuracy`), con valores entre 0 y 1
+- se envíen parámetros y la etiqueta `modelo`
+- se registre el pipeline completo (preprocessing + modelo), con `predict_proba`
+
+Es una sola prueba parametrizada. Los modelos que cubre están en la lista `MODELOS`:
+
+| Script | Run esperado |
+|---|---|
+| `src.training.train_svm` | `svm` |
+| `src.training.train_random_forest` | `random_forest` |
+| `src.training.train_baseline` | `baseline` |
+| `src.training.train_logistic_regression` | `logistic_regression` |
+| `src.training.train_decision_tree` | `decision_tree` |
+
+Si se agrega un modelo nuevo, alcanza con sumar una línea a `MODELOS`.
+
+Requisito: haber ejecutado `dvc pull`, porque los scripts entrenan con el dataset real. Durante la prueba se fija `MPLBACKEND=Agg` para que los gráficos de los scripts no abran ventanas.
+
+```bash
+python -m pytest test/test_integracion_modelos.py -v
+```
+
+Resultado verificado:
+
+```text
+5 passed
+```
+
+Pueden aparecer tres avisos esperables: dos `FigureCanvasAgg is non-interactive` (por los `plt.show()` de Random Forest y Decision Tree) y un `UndefinedMetricWarning` del baseline, que nunca predice churn y por eso su Precision queda indefinida.
+
 #### Pruebas de datos y preprocesamiento
 
 Verifican que el dataset tenga la estructura esperada y que el preprocesamiento
 maneje correctamente los valores faltantes.
 
-Requisito: haber ejecutado `dvc pull`, ya que `test_dataset.py` utiliza el dataset real.
+Requisito: haber ejecutado `dvc pull`, ya que `test_dataset.py` y `test_preprocessing.py` utilizan el dataset real.
 
 Para ejecutarlas, desde la carpeta raíz del proyecto:
 
 ```bash
-python -m pytest test/test_dataset.py test/test_valores_faltantes.py -v
+python -m pytest test/test_dataset.py test/test_valores_faltantes.py test/test_preprocessing.py -v
 ```
 
 `test_dataset.py` utiliza el dataset local `data/raw/customer_churn_historical.csv`.
@@ -219,10 +262,17 @@ Utiliza un pequeño conjunto de clientes construido dentro de la prueba, por lo 
 
 En todos los casos se verifica que no queden nulos y que no se pierdan registros.
 
+**`test/test_preprocessing.py`** — transformaciones del preprocessing:
+
+Utiliza una muestra de 200 clientes del dataset real, por lo que requiere `dvc pull`.
+
+- `test_preprocesamiento_conserva_registros_y_salida_valida`: el preprocesador transforma la muestra sin perder registros y la salida es una matriz numérica sin valores nulos ni infinitos.
+- `test_preprocesamiento_mantiene_columnas_en_datos_nuevos`: un preprocesador entrenado con una parte de la muestra genera la misma cantidad de columnas al transformar clientes que no vio. Es lo que pasa en inferencia: si un cliente nuevo generara otra cantidad de columnas, el modelo no podría predecir.
+
 Resultado verificado:
 
 ```text
-8 passed
+10 passed
 ```
 
 Para ejecutar todas las pruebas del proyecto:
@@ -319,9 +369,10 @@ El script:
 - separa las variables predictoras y la variable objetivo
 - realiza la division train/test
 - aplica el preprocessing comun
-- entrena la configuracion seleccionada de SVM
+- entrena la configuracion seleccionada de SVM (`kernel="rbf"`, `C=1.0`, `class_weight="balanced"`)
 - calcula Precision, Recall, F1-score, ROC-AUC y Accuracy
 - muestra la matriz de confusion
+- registra los parametros, las metricas, las etiquetas y el pipeline entrenado en MLflow/DagsHub (run `svm`)
 
 ### Decision Tree Classifier
 
@@ -643,6 +694,57 @@ python -m pytest test/test_contrato_entrada.py -v
 
 Las pruebas se pueden ejecutar sin tener descargados el dataset ni el modelo. Se verifica que se pueda ingresar un cliente válido y que se rechacen los datos incompletos, las categorías que no pertenecen al dataset, los valores fuera de rango y los tipos incorrectos. También se comprueba que los campos definidos en el contrato coincidan con las columnas que utiliza el pipeline.
 
+## Contrato de salida de la API
+
+La respuesta de `POST /predict` está definida en `app/schemas.py`, en la clase `PredictionResponse`. El endpoint la usa como `response_model`, así que FastAPI valida lo que devuelve la API y lo muestra en Swagger.
+
+### Campos
+
+| Campo | Tipo | Valores | Origen |
+|---|---|---|---|
+| `prediction` | texto | `CHURN`, `NO_CHURN` | etiquetas definidas en `src/inference/predict.py` |
+| `probability` | decimal | entre 0 y 1 | probabilidad de abandono (`predict_proba`) |
+| `risk_level` | texto | `LOW`, `MEDIUM`, `HIGH` | `calcular_risk_level()`, con los umbrales acordados |
+| `model_version` | texto | por ejemplo `"1"` | versión de `models/model_meta.json` |
+| `request_id` | texto | UUID | lo genera el endpoint en cada pedido |
+
+Los cuatro primeros campos son los que pide la consigna. `request_id` se agregó para identificar cada predicción; no lo calcula `predecir()`, lo agrega el endpoint.
+
+Ejemplo de respuesta:
+
+```json
+{
+  "prediction": "CHURN",
+  "probability": 0.81,
+  "risk_level": "HIGH",
+  "model_version": "1",
+  "request_id": "3f1c9a2e-8b7d-4e5f-9a1b-2c3d4e5f6a7b"
+}
+```
+
+Este mismo ejemplo aparece en Swagger (`/docs`).
+
+### Pruebas
+
+```bash
+python -m pytest test/test_contrato_salida.py -v
+```
+
+No necesitan el modelo ni el dataset: para probar `predecir()` se usa un pipeline falso que devuelve la probabilidad indicada.
+
+- `test_respuesta_valida_se_acepta`: una respuesta correcta pasa la validación.
+- `test_la_respuesta_tiene_los_campos_acordados`: el contrato tiene exactamente los cinco campos.
+- `test_falta_un_campo`: si falta cualquiera de los campos, se rechaza.
+- `test_valor_invalido_se_rechaza`: se rechazan valores fuera del contrato (probabilidad fuera de 0-1, nivel de riesgo inexistente, etiqueta distinta, versión numérica, `request_id` vacío).
+- `test_etiquetas_coinciden_con_la_inferencia` y `test_niveles_de_riesgo_coinciden_con_la_inferencia`: los valores permitidos en el contrato son los mismos que usa `predict.py`. Si alguien cambia una etiqueta o un nivel en un solo lado, la prueba avisa.
+- `test_la_salida_de_predecir_cumple_el_contrato`: lo que devuelve `predecir()`, más el `request_id` que agrega el endpoint, cumple el contrato para los tres niveles de riesgo.
+
+Resultado verificado:
+
+```text
+20 passed
+```
+
 ## API (FastAPI)
 
 La API expone el modelo como un servicio HTTP. El modelo se carga una sola vez al
@@ -739,6 +841,88 @@ Se verifican cuatro situaciones:
 - Modelo no disponible: el endpoint responde HTTP 503.
 
 Las pruebas utilizan `monkeypatch` para simular las condiciones necesarias sin modificar la implementación real de inferencia.
+
+### Pruebas del contrato HTTP y Swagger
+
+```bash
+python -m pytest test/test_contrato_http.py -v
+```
+
+Complementan a `test/test_predict.py`: no repiten el caso válido ni los códigos 503, 500 y 422, sino que controlan que los endpoints sean consistentes entre sí y que la documentación generada por FastAPI refleje los contratos.
+
+No necesitan el modelo real: al iniciar la API se reemplaza la carga del modelo por un pipeline falso.
+
+Consistencia entre endpoints:
+
+- `test_model_version_igual_en_health_predict_y_model_meta`: la versión que informa `/health` es la misma que devuelve `/predict` y la que figura en `models/model_meta.json`.
+- `test_request_id_es_un_uuid_distinto_en_cada_pedido`: cada predicción tiene un `request_id` con formato UUID que no se repite.
+- `test_la_api_no_devuelve_campos_fuera_del_contrato`: si la inferencia devolviera un dato de más, la API no lo expone.
+- `test_la_api_no_entrega_una_respuesta_fuera_del_contrato`: si la inferencia devolviera una probabilidad inválida, la API responde con error en lugar de entregarla.
+
+Documentación Swagger / OpenAPI:
+
+- `test_swagger_esta_disponible`: `/docs` responde.
+- `test_openapi_documenta_los_dos_endpoints`: aparecen `GET /health` y `POST /predict`.
+- `test_openapi_predict_usa_los_contratos_de_entrada_y_salida`: `/predict` documenta `PredictionRequest` como entrada, `PredictionResponse` como salida y el error 422.
+- `test_openapi_contrato_de_salida_completo_y_con_ejemplo`: los cinco campos de salida figuran como obligatorios y se muestra el ejemplo.
+- `test_openapi_contrato_de_entrada_marca_los_obligatorios`: todos los campos de entrada son obligatorios salvo `TotalCharges`.
+
+Resultado verificado:
+
+```text
+9 passed
+```
+
+## Pruebas automáticas (pytest)
+
+Para ejecutar todas las pruebas, desde la carpeta raíz del proyecto:
+
+```bash
+python -m pytest test/ -v
+```
+
+Algunas pruebas usan el dataset o el modelo real, así que antes hay que ejecutar `python -m dvc pull` (ver "Cómo levantar el proyecto"). Sin esos archivos, esas pruebas fallan indicando qué falta.
+
+### Archivos de prueba
+
+| Archivo | Qué prueba | Necesita `dvc pull` |
+|---|---|---|
+| `test_dataset.py` | estructura y tipos del dataset histórico | sí (dataset) |
+| `test_valores_faltantes.py` | imputación de nulos en el preprocessing | no |
+| `test_preprocessing.py` | transformación sin pérdida de registros y columnas consistentes | sí (dataset) |
+| `test_mlflow_utils.py` | funciones compartidas de MLflow | no |
+| `test_integracion_modelos.py` | que cada script de entrenamiento registre bien en MLflow | sí (dataset) |
+| `test_carga_modelo.py` | carga del pipeline serializado | solo la prueba del modelo real |
+| `test_inferencia.py` | predicción, estructura de la salida, umbrales de riesgo | sí, salvo las de umbrales |
+| `test_contrato_entrada.py` | validaciones de `PredictionRequest` | no |
+| `test_contrato_salida.py` | validaciones de `PredictionResponse` y coherencia con la inferencia | no |
+| `test_health.py` | `GET /health` con y sin modelo | solo `test_health_ok` |
+| `test_predict.py` | `POST /predict`: caso válido, 503, 500 y 422 | sí, salvo 503 y 422 |
+| `test_predict_validaciones.py` | errores 422 por HTTP con el campo que falló | no |
+| `test_contrato_http.py` | consistencia entre endpoints y documentación Swagger/OpenAPI | no |
+
+### Cobertura de las pruebas obligatorias de la consigna
+
+| Prueba obligatoria | Dónde se cubre |
+|---|---|
+| Carga del modelo o pipeline | `test_carga_modelo.py` |
+| Ejecución de una predicción válida | `test_inferencia.py`, `test_predict.py` |
+| Estructura y tipos de la respuesta | `test_inferencia.py`, `test_contrato_salida.py`, `test_predict.py`, `test_contrato_http.py` |
+| Endpoint `/health` | `test_health.py` |
+| Endpoint `/predict` | `test_predict.py`, `test_contrato_http.py` |
+| Entradas inválidas y errores | `test_contrato_entrada.py`, `test_predict_validaciones.py`, `test_predict.py` (422, 503, 500), `test_inferencia.py` (columnas faltantes) |
+
+### Límites de la suite
+
+- Las pruebas de MLflow simulan las llamadas, así que no verifican la conexión real con DagsHub. Esa conexión se comprueba ejecutando los scripts de entrenamiento y revisando los runs en el experimento `churn-classification`.
+- `test_integracion_modelos.py` entrena los cinco modelos, por lo que es la parte más lenta de la suite.
+- Docker y Docker Compose no se prueban con pytest: se verifican con `docker build`, `docker compose up` y una solicitud real a `/health` y `/predict`.
+
+### Resultado de la suite completa
+
+```text
+<91 passed, 4 warnings : resultado de python -m pytest test/ -v>
+```
 
 ## Reproduccion del flujo
 
