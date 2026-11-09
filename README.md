@@ -25,7 +25,7 @@ Pipeline del modelo (versión 1 del Model Registry)
    └─ Logistic Regression: calcula la probabilidad de abandono
    │
    ▼
-Umbrales de riesgo: LOW < 0.20 · MEDIUM 0.20–0.50 · HIGH ≥ 0.50
+Umbrales de riesgo: LOW < 0.20 · MEDIUM: 0.20 ≤ probabilidad < 0.50 · HIGH ≥ 0.50
    │
    ▼
 Respuesta: prediction, probability, risk_level, model_version, request_id
@@ -60,8 +60,8 @@ customer-churn-ml/
 ├── models/
 │   ├── churn_pipeline.joblib.dvc  # modelo servido (version 1 del Model Registry)
 │   └── model_meta.json            # nombre, version y run de MLflow del modelo
-├── monitoring/        # monitoreo del modelo en produccion - entrega final
-├── notebooks/         # notebooks de EDA y experimentacion
+├── monitoring/        # reservado para monitoreo en la entrega final
+├── notebooks/         # reservado para notebooks de análisis y experimentación
 ├── scripts/
 │   └── exportar_modelo.py  # exporta el modelo registrado a models/
 ├── src/
@@ -117,6 +117,12 @@ Para poder descargarlos, cada persona debe configurar su propio acceso:
    dvc pull
 
 Este comando recupera los archivos administrados por DVC, incluyendo el dataset historico y el pipeline serializado del modelo
+
+## Ejecutar con Docker y Docker Compose
+
+Pendiente de completar con los pasos verificados para preparar el modelo, construir la imagen, levantar el servicio y probar `/health` y `/predict`.
+
+
 
 ## Ejecucion de los modulos
 
@@ -837,9 +843,37 @@ Este endpoint recibe los datos de un cliente y devuelve una predicción de aband
 
 Está implementado en `app/main.py` y utiliza los contratos `PredictionRequest` y `PredictionResponse` definidos en `app/schemas.py`.
 
-Los datos de entrada se validan con Pydantic antes de realizar la predicción. Las 19 variables requeridas y sus validaciones están documentadas en la sección "Contrato de entrada de la API".
+Pydantic valida los datos antes de realizar la predicción. El contrato tiene 19 campos de entrada, de los cuales 18 son obligatorios y `TotalCharges` es opcional. Los tipos y valores permitidos se detallan en [Contrato de entrada de la API](#contrato-de-entrada-de-la-api).
 
 El endpoint reutiliza el pipeline cargado al iniciar FastAPI y llama a la función `predecir()` de `src/inference/predict.py`. No vuelve a cargar ni entrenar el modelo para cada solicitud.
+
+#### Ejemplo de solicitud
+
+Con la API iniciada, abrí [Swagger](http://127.0.0.1:8000/docs). Desplegá `POST /predict` y hacé clic en **Try it out**. Pegá el siguiente JSON y presioná **Execute**. Si la solicitud es válida y el modelo está cargado, la API responde con HTTP `200`.
+
+```json
+{
+  "gender": "Female",
+  "SeniorCitizen": 0,
+  "Partner": "Yes",
+  "Dependents": "No",
+  "tenure": 12,
+  "PhoneService": "Yes",
+  "MultipleLines": "No",
+  "InternetService": "Fiber optic",
+  "OnlineSecurity": "No",
+  "OnlineBackup": "No",
+  "DeviceProtection": "No",
+  "TechSupport": "No",
+  "StreamingTV": "No",
+  "StreamingMovies": "No",
+  "Contract": "Month-to-month",
+  "PaperlessBilling": "Yes",
+  "PaymentMethod": "Electronic check",
+  "MonthlyCharges": 70.5,
+  "TotalCharges": 846.0
+}
+```
 
 #### Respuesta de la API
 
@@ -961,9 +995,9 @@ Algunas pruebas usan el dataset o el modelo real, así que antes hay que ejecuta
 
 ### Resultado de la suite completa
 
-```text
-<91 passed, 4 warnings : resultado de python -m pytest test/ -v>
-```
+En el commit `0b894ff`, `python -m pytest test/ -v` terminó con 91 pruebas aprobadas, 4 avisos y ningún fallo, en 35,85 segundos.
+
+La huella MD5 de `models/churn_pipeline.joblib` coincidió antes y después de ejecutar la suite completa.
 
 ## Reproduccion del flujo
 
