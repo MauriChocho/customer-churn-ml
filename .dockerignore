@@ -1,0 +1,31 @@
+# Control de versiones
+.git
+.gitignore
+
+# Entornos virtuales y caches
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secretos y configuracion local (nunca van en la imagen)
+.env
+*.env
+.dvc/config.local
+
+# Datos, notebooks y material que la API no usa
+data/
+notebooks/
+monitoring/
+scripts/
+test/
+.dvc/
+.dvcignore
+mlflow.db
+
+# Documentacion y editor
+README.md
+.vscode/
+.DS_Store
