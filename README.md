@@ -948,6 +948,89 @@ Resultado verificado:
 9 passed
 ```
 
+## Docker y Docker Compose
+
+La API se empaqueta en una imagen Docker que incluye Python, las dependencias, el código
+(`app/` y `src/`) y el modelo exportado (`models/`). El contenedor no se conecta a DagsHub
+ni necesita credenciales: usa la versión 1 del modelo, copiada al construir la imagen.
+
+### Archivos
+
+| Archivo | Función |
+|---|---|
+| `Dockerfile` | Construye la imagen: `python:3.13-slim`, dependencias de `requirements-docker.txt`, código y modelo |
+| `requirements-docker.txt` | Dependencias mínimas que necesita la API |
+| `.dockerignore` | Excluye de la imagen datos, entornos virtuales, tests y archivos con credenciales |
+| `compose.yaml` | Levanta el servicio `api` en el puerto 8000, con healthcheck sobre `/health` |
+
+### Requisitos
+
+- Docker Desktop instalado y abierto, con el estado **Engine running**
+  (en Windows requiere WSL 2 y virtualización habilitada).
+- El puerto 8000 libre (detener `uvicorn` si está en ejecución).
+
+### 1. Obtener el modelo antes de construir la imagen
+
+El modelo no se versiona en Git. Debe descargarse con DVC **antes** del build, porque la
+imagen lo copia desde `models/`:
+
+```bash
+python -m dvc pull models/churn_pipeline.joblib.dvc
+```
+
+Para verificar que es la versión registrada (Windows PowerShell):
+
+```powershell
+Get-FileHash models\churn_pipeline.joblib -Algorithm MD5
+```
+
+Debe dar `2657E6F63A25CEDA66E407C2755ABF79`.
+
+> Si se construye la imagen sin el modelo, la API arranca igual, pero `/health`
+> responde 503 y el contenedor queda en estado `unhealthy`.
+
+### 2. Construir y levantar
+
+Desde la carpeta raíz del proyecto:
+
+```bash
+docker compose up --build
+```
+
+La primera vez tarda algunos minutos. Al terminar, debe aparecer:
+
+```text
+Modelo cargado correctamente. Version: 1
+Uvicorn running on http://0.0.0.0:8000
+```
+
+### 3. Verificar
+
+- `http://localhost:8000/health` → `{"status":"ok","model_loaded":true,"model_version":"1"}`
+- `http://localhost:8000/docs` → `POST /predict` → *Try it out* → *Execute*: respuesta 200
+  con `prediction`, `probability`, `risk_level`, `model_version` y `request_id`.
+
+En otra terminal, también desde la raíz del proyecto:
+
+```bash
+docker compose ps      # el servicio debe figurar como (healthy) tras unos 30 segundos
+docker compose logs    # carga del modelo y un registro por cada solicitud
+```
+
+### 4. Detener
+
+```bash
+docker compose down
+```
+
+### Verificación realizada
+
+Recorrido probado desde un clon nuevo, en Windows con Docker Desktop y WSL 2:
+build correcto, `/health` 200 con versión 1, `/predict` 200, entrada inválida 422
+y contenedor `(healthy)`.
+
+
+
 ## Pruebas automáticas (pytest)
 
 Para ejecutar todas las pruebas, desde la carpeta raíz del proyecto:
