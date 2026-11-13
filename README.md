@@ -118,12 +118,6 @@ Para poder descargarlos, cada persona debe configurar su propio acceso:
 
 Este comando recupera los archivos administrados por DVC, incluyendo el dataset historico y el pipeline serializado del modelo
 
-## Ejecutar con Docker y Docker Compose
-
-Pendiente de completar con los pasos verificados para preparar el modelo, construir la imagen, levantar el servicio y probar `/health` y `/predict`.
-
-
-
 ## Ejecucion de los modulos
 
 Los comandos deben ejecutarse desde la carpeta raiz del proyecto.
@@ -1160,4 +1154,8 @@ Para que la API utilice un modelo nuevo, este debe registrarse en MLflow y luego
 
 ## Estado actual
 
-🚧 Proyecto en desarrollo — Implementacion de Docker y Docker Compose - Entrega 2 en curso.
+Segunda entrega implementada: API de inferencia con FastAPI y Pydantic, pruebas automatizadas con pytest y contenerizacion con Docker y Docker Compose.
+
+La ejecucion de Docker Compose fue verificada desde un clon nuevo, con carga del modelo version 1 y respuestas HTTP 200 para solicitudes validas y HTTP 422 para entradas invalidas.
+
+Las etapas de CI/CD, despliegue y monitoreo corresponden a la entrega final.
