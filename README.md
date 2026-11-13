@@ -114,9 +114,9 @@ Para poder descargarlos, cada persona debe configurar su propio acceso:
 
 4. Recuperar los archivos versionados con DVC:
 
-   dvc pull
+   dvc pull models/churn_pipeline.joblib.dvc data/raw/customer_churn_historical.csv.dvc
 
-Este comando recupera los archivos administrados por DVC, incluyendo el dataset historico y el pipeline serializado del modelo
+Este comando recupera el dataset historico y el pipeline serializado del modelo. Se indica cada archivo porque, con el `.gitignore` del proyecto, un `dvc pull` sin indicar archivos no descarga nada.
 
 ## Ejecucion de los modulos
 
@@ -274,7 +274,7 @@ python -m pytest test/test_dataset.py test/test_valores_faltantes.py test/test_p
 
 `test_dataset.py` utiliza el dataset local `data/raw/customer_churn_historical.csv`.
 
-> Si el archivo no está, la prueba lo indica; se recupera con `dvc checkout` o `dvc pull`.
+> Si el archivo no está, la prueba lo indica; se recupera con `dvc pull data/raw/customer_churn_historical.csv.dvc`.
 
 **`test/test_dataset.py`** — estructura del dataset histórico:
 
@@ -1033,7 +1033,7 @@ Para ejecutar todas las pruebas, desde la carpeta raíz del proyecto:
 python -m pytest test/ -v
 ```
 
-Algunas pruebas usan el dataset o el modelo real, así que antes hay que ejecutar `python -m dvc pull` (ver "Cómo levantar el proyecto"). Sin esos archivos, esas pruebas fallan indicando qué falta.
+Algunas pruebas usan el dataset o el modelo real, así que antes hay que ejecutar `python -m dvc pull models/churn_pipeline.joblib.dvc data/raw/customer_churn_historical.csv.dvc` (ver "Cómo levantar el proyecto"). Sin esos archivos, esas pruebas fallan indicando qué falta.
 
 ### Archivos de prueba
 
@@ -1091,7 +1091,7 @@ pip install -r requirements.txt
 3. Recuperar los archivos administrados por DVC (dataset histórico y modelo exportado del Model Registry):
 
 ```bash
-python -m dvc pull
+python -m dvc pull models/churn_pipeline.joblib.dvc data/raw/customer_churn_historical.csv.dvc
 ```
 
 4. Ejecutar las pruebas:
